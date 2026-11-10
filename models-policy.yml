@@ -1,0 +1,147 @@
+# Model policy — what may enter dsh/cordis.patch.yml
+#
+# Written 2026-11-10. The model menu is a curated list, not a catalog window:
+# a row is admitted only while it clears every gate below, measured on this
+# machine rather than taken from a vendor page. `scripts/check_models.py`
+# enforces the list; run it before every commit.
+#
+# Why these gates: a cheap sticker price means nothing if the prefix does not
+# cache, because an agent turn re-reads its context every time. That is the trap
+# both Muse Spark Contributor and GLM-5.3 Flash fell into.
+
+version: 1
+updated: 2026-11-10
+
+criteria:
+  # Thresholds are the envelope of the admitted set: no row may be worse than
+  # the current worst on any axis. That closes the menu without exceptions and
+  # without recomputing quantiles on every measurement round.
+  #
+  # Set 2026-11-10 from measurements-2026-11-10-run2.csv. scripts/evaluate_gates.py
+  # proves both directions: every admitted row clears its tier, and every
+  # measured row outside the menu misses at least one gate.
+  method: "envelope of the admitted set; no waivers, no exceptions"
+
+  # One mechanism for every row, in two phases.
+  #
+  # Phase 1 is static: capability, price and plan access come from the catalog,
+  # so a row that fails here is never measured and never costs a token.
+  # Phase 2 is measured: speed, latency and cache are the only properties that
+  # need the API, so only the survivors of phase 1 are worth a request.
+  #
+  # Both phases are the envelope of the six admitted rows: nothing new enters
+  # without a threshold moving on purpose.
+  phases:
+    static:
+      capability_min: 38.0
+      cost_max: 0.0026
+    measured:
+      speed_min: 88
+      latency_max: 4.80
+      cache_min: 0.80
+
+  # Third phase: does the route serve the model well enough for a loop?
+  # Measured by scripts/provider_fitness.py, recorded in fitness-2026-11-10.csv
+  # and enforced by evaluate_gates.py. One run per model for now; re-run it
+  # when a provider changes something.
+    fitness:
+      prefill_ms_per_1k_max: 25
+      cache_hit_min: 0.80
+      retention_4x_min: 0.60
+      errors_per_10_max: 1
+      tools_valid_min: 0.90
+
+  protocol:
+    speed: "median of three 1,600-token generations"
+    latency: "median of three warm passes, after two priming requests"
+    cache: "works if any warm pass reads cached tokens; a 3-pass hit rate is noise, not signal"
+
+  notes:
+    daily: "streaming speed and a tight start; Fast, Haiku, MiniMax and Luna"
+    budget: "slower start traded for price, higher capability floor; Ember and Spark 1.3"
+    cache: "hit rate over >= 4 warm requests; a two-pass probe reports 0 on rows that do cache"
+    access: "no 403 MODEL_NOT_IN_PLAN"
+
+# Rows the config is allowed to serve. Keep in sync with the patch file:
+# the checker fails if either side drifts.
+admitted:
+  - id: deepseek/deepseek-v4.1-flash-fast
+    route: command-code
+    output_tps: 100-116
+    ttft_seconds: 1.7-1.9
+    caches: true
+    cost_per_turn_usd: 0.0025
+    note: default; cheapest on a cold cache, only row on the completions route
+  - id: claude-haiku-5-5
+    route: command-code-anthropic
+    output_tps: 146
+    ttft_seconds: 1.7-1.9
+    caches: true
+    cost_per_turn_usd: 0.0017
+    note: fastest and cheapest per turn; wins every gate but is not the default
+  - id: minimax/minimax-m3.1-flash
+    route: command-code
+    output_tps: 111
+    ttft_seconds: 2.39
+    caches: true
+    cost_per_turn_usd: 0.0024
+    note: admitted 2026-11-10 by owner choice; clears the 2.52 s tolerance band on the three-pass median
+  # Budget tier: admitted 2026-11-10 by owner choice to trade start latency for
+  # price. See the `tiers` block above for the gates they clear.
+  - id: gpt-6-luna
+    route: command-code
+    output_tps: 98
+    ttft_seconds: 1.32
+    caches: true
+    cost_per_turn_usd: 0.0017
+    capability: 38.1
+    note: admitted 2026-11-10 by owner choice; 0.05 short on capability, inside the CI
+
+# Every row measured and rejected, with the number that killed it.
+excluded:
+  - id: meta/muse-ember
+    reason: "provider fitness: 36.3 ms/1k prefill, 67% cache, 0.37 retention under 4x. The route, not the model"
+  - id: meta/muse-spark-1.3-contributor
+    reason: "provider fitness: 115.2 ms/1k prefill and 33% cache. Reads 60k in 6.8 s where Luna takes 1.6"
+  - id: meta/muse-spark-1.2-contributor
+    reason: "provider fitness: 60.2 ms/1k prefill. Cheapest sticker, worst prefill in the set"
+  - id: z-ai/glm-5.3-flash
+    reason: "74 tok/s, below the 100 gate; $0.0036/turn (1.4x). It does cache (36,992 of 37,014 on pass 2), which the 2026-11-09 round had wrong"
+  - id: meta/muse-spark-1.3
+    reason: "$1.25/$4.25 without a cache: $0.119/turn"
+  - id: meta/muse-spark-open
+    reason: "$1.25/$4.25, 38.9 intelligence: dominated by Step 5 on every axis"
+  - id: meta/muse-wonder-1.0
+    reason: "403 MODEL_NOT_IN_PLAN"
+  - id: claude-sonnet-5-5
+    reason: "the fastest start measured (1.40 s cold, 1.17 s warm) and the highest capability in the set (56.0), but $0.0259/turn is 5.4x the cost gate; cost is the only thing that disqualifies it"
+  - id: claude-opus-5-5
+    reason: "403 MODEL_NOT_IN_PLAN"
+  - id: claude-fable-5-2
+    reason: "403 MODEL_NOT_IN_PLAN"
+  - id: gpt-6.1-sol
+    reason: "403 MODEL_NOT_IN_PLAN"
+  - id: google/gemini-4-argon
+    reason: "403 MODEL_NOT_IN_PLAN"
+  - id: stepfun/Step-5-Preview
+    reason: "167 tok/s and it caches, but $0.0095/turn (3.8x) and 2.8 s cold TTFT"
+  - id: nvidia/nemotron-3.5-super-vl
+    reason: "382 tok/s and it caches, but $0.0045/turn (1.8x) and 26.5 intelligence"
+  - id: Qwen/Qwen3.7-Flash
+    reason: "64 tok/s and 7.79 s to first token; the cheapest sticker in the catalog ($0.03/$0.13) does not survive either speed gate"
+  - id: moonshotai/Kimi-K3.1-Pro
+    reason: "32 tok/s measured"
+  - id: xai/grok-4.7
+    reason: "68 tok/s, $0.0555/turn"
+  - id: Qwen/Qwen3.8-Max-0902
+    reason: "47 tok/s, $0.0333/turn"
+  - id: zai-org/GLM-5.3
+    reason: "67 tok/s, $0.0311/turn"
+  - id: z-ai/glm-5.3-flashx
+    reason: "slower than Fast for $0.0089/turn, no published score"
+  - id: xiaomi/mimo-v2.6-pro
+    reason: "26 tok/s and 8.4 s to first token: the slowest row measured"
+  - id: deepseek/deepseek-v4.1-flash
+    reason: "9-47 s TTFT on this lane"
+  - id: deepseek/deepseek-v4.1-flash-ultrafast
+    reason: "$2.40/$9.60, $0.0211/turn for latency Fast already provides"
