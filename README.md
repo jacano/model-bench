@@ -2,9 +2,8 @@
 
 What a DeepSeek Harness subscription actually costs, and what it can do: the price of a
 million tokens after the plan's multiplier and its ceiling, Terminal-Bench as capability,
-and the frontier through whatever nothing beats.
-
-The picture: **https://jacano.github.io/model-bench/**
+and the frontier through whatever nothing beats. The picture it publishes:
+**https://jacano.github.io/model-bench/**
 
 | Repository | Holds |
 | --- | --- |
@@ -21,8 +20,10 @@ python bench.py measure   # the stored rows against the gates, and the menu
 python bench.py agentic   # one real bug in one real repository, pytest decides
 ```
 
-Standard library only. `measure` is the one command that reads another repository: clone
-`dsh-config` beside this one, or point `DSH_CONFIG` at its `dsh/cordis.patch.yml`.
+Python 3. `plan` needs nothing else; `chart` draws the png with Pillow (`pip install
+pillow`); `chart --html` writes the page without it; `agentic` runs DSH headless, so it needs
+DSH installed and a key in its store. `measure` reads the DSH menu from another repository —
+clone `dsh-config` beside this one, or point `DSH_CONFIG` at its `dsh/cordis.patch.yml`:
 
 ```bash
 git clone https://github.com/jacano/dsh-config ../dsh-config
@@ -56,9 +57,10 @@ point with no gate behind it.
 ## Where the numbers come from
 
 Prices from the provider's own card and credits pages, named under `sources` in
-`data/plans.json` — the card gives the fee, the credits page gives how far it goes.
-Capability from Terminal-Bench, executed and graded. Behaviour measured here, in
-`models.csv`. The provider never grades itself; nothing here calls the network.
+`data/plans.json`: the card gives the fee, the credits page gives how far it goes. Capability
+from Terminal-Bench, executed and graded. Behaviour measured by `measure` against the live
+route, in `models.csv`. The provider never grades itself, and only `measure` and `agentic`
+touch the network.
 
 ## License
 
