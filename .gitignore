@@ -1,0 +1,7 @@
+# Bytecode
+__pycache__/
+*.pyc
+
+# The chart and the page are regenerated on demand; the published page is versioned
+frontier*.png
+frontier.html

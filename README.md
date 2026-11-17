@@ -1,4 +1,4 @@
-# bench — choosing the models
+# model-bench — choosing the models
 
 One script, four data files, four questions. The script does not decide anything by
 itself: it prices, it draws, it measures, it runs a task, and it says what it could
@@ -12,11 +12,11 @@ Terminal-Bench against what the plan actually charges, with the multiplier and t
 ceiling already inside the number.
 
 ```bash
-python bench/bench.py plan               # what a million tokens costs
-python bench/bench.py chart              # the Pareto picture of the same table
-python bench/bench.py chart --html docs/index.html       # the page the site serves
-python bench/bench.py measure            # the stored table against the gates
-python bench/bench.py agentic --provider opendesign --model deepseek-v4.1-flash
+python bench.py plan               # what a million tokens costs
+python bench.py chart              # the Pareto picture of the same table
+python bench.py chart --html docs/index.html       # the page the site serves
+python bench.py measure            # the stored table against the gates
+python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 ```
 
 | | |
@@ -27,8 +27,26 @@ python bench/bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 | `models.csv` | the measured rows: one line per route, with the eight numbers the gates read. No price - that is `plan`'s table |
 | `page.html` | the page `chart --html` fills in, served by Pages from `docs/` |
 
-Nothing here edits the DSH configuration; that is a separate change in
-[`../dsh/`](../dsh/).
+Nothing here edits the DSH configuration. The menu this benchmark governs is declared in
+another repository, [`jacano/dsh-config`](https://github.com/jacano/dsh-config), and
+`measure` reads it to check that the two agree:
+
+```bash
+git clone https://github.com/jacano/dsh-config ../dsh-config   # the default place
+DSH_CONFIG=/path/to/cordis.patch.yml python bench.py measure    # or say where
+```
+
+Everything except `measure` runs without that clone.
+
+## Where this sits
+
+| Repository | Holds |
+| --- | --- |
+| **model-bench** (here) | The measurement: prices, the board, the gates, the frontier, the page. |
+| [`dsh-config`](https://github.com/jacano/dsh-config) | The configuration the numbers end up choosing: providers, the model menu. |
+| [`agent-skills`](https://github.com/jacano/agent-skills) | Procedures an agent follows, with the code they need. |
+
+The page this publishes is <https://jacano.github.io/model-bench/>.
 
 ## Four questions, not a pipeline
 
@@ -55,9 +73,9 @@ plan's ceiling and the hours it charges double for are already inside the number
 what is left is the shape of your own traffic - and that is yours to know.
 
 ```bash
-python bench/bench.py plan                        # every model worth a plan
-python bench/bench.py plan --model claude-haiku-5.5
-python bench/bench.py plan --today 2026-10-22     # the day a promo was live
+python bench.py plan                        # every model worth a plan
+python bench.py plan --model claude-haiku-5.5
+python bench.py plan --today 2026-10-22     # the day a promo was live
 ```
 
 ```
@@ -123,9 +141,9 @@ Claude rows go through `/messages` with a `cache_control` breakpoint: they refus
 `/chat/completions` and cache nothing without it.
 
 ```bash
-python bench/bench.py measure                    # the stored table against the gates
-python bench/bench.py measure --model <id> --tbench 38.5
-python bench/bench.py measure --provider opendesign --model deepseek-v4.1-flash
+python bench.py measure                    # the stored table against the gates
+python bench.py measure --model <id> --tbench 38.5
+python bench.py measure --provider opendesign --model deepseek-v4.1-flash
 ```
 
 ## agentic — a real task
@@ -180,10 +198,10 @@ The work is in the data, and the four commands read it. In order:
    with `input`, `cache`, `cache_write`, `output` and a `factor`. Where the console
    charges something other than what the page advertises, `billed_factor` carries the
    bill and `factor` keeps the brochure - the same split `open-design` uses for Haiku.
-3. **Price it:** `python bench/bench.py plan`. Every rate already has the multiplier,
+3. **Price it:** `python bench.py plan`. Every rate already has the multiplier,
    the ceiling and the peak hour inside it, so what it prints is what a million tokens
    costs - check those against the provider's own arithmetic.
-4. **Draw it:** `python bench/bench.py chart`. Price across, Terminal-Bench up, the
+4. **Draw it:** `python bench.py chart`. Price across, Terminal-Bench up, the
    board's floor as a red line and the frontier drawn through whatever nothing beats.
    The picture answers "is anything here worth buying" before a token is spent, and
    `--mix fresh,cache,out` prices a request of your own shape instead of a million.

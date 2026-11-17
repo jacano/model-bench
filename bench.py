@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """bench — one script, what a subscription costs and what it can do.
 
-    python bench/bench.py plan               # what a million tokens costs
-    python bench/bench.py plan --model claude-haiku-5.5
-    python bench/bench.py plan --today 2026-10-22
-    python bench/bench.py chart              # the Pareto picture of the same table
-    python bench/bench.py measure            # the stored table against the gates
-    python bench/bench.py agentic --provider opendesign --model deepseek-v4.1-flash
+    python bench.py plan               # what a million tokens costs
+    python bench.py plan --model claude-haiku-5.5
+    python bench.py plan --today 2026-10-22
+    python bench.py chart              # the Pareto picture of the same table
+    python bench.py measure            # the stored table against the gates
+    python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 
 Four questions, in the order they cost money:
 
@@ -24,7 +24,10 @@ data/tbench.json   the board: what each model does on Terminal-Bench, and throug
 models.csv         what each route measured on the wire, one line per route
 models-policy.yml  the gates, and which ids are admitted
 
-Nothing here edits the DSH configuration; that is a separate change in ../dsh/.
+Nothing here edits the DSH configuration. The menu it governs is declared in
+another repository, [jacano/dsh-config](https://github.com/jacano/dsh-config), and
+`measure` reads that file to check the two agree. A sibling clone is the default;
+`DSH_CONFIG` points somewhere else.
 """
 
 from __future__ import annotations
@@ -47,13 +50,15 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 BENCH = Path(__file__).resolve().parent
-REPO = BENCH.parent
 DATA = BENCH / "data"
 PLANS_FILE = DATA / "plans.json"
 TBENCH_FILE = DATA / "tbench.json"
 POLICY = BENCH / "models-policy.yml"
 MEASURED = BENCH / "models.csv"
-CONFIG = REPO / "dsh" / "cordis.patch.yml"
+# The menu is configuration, so it lives in jacano/dsh-config, beside a clone of this
+# repository. Resolved on use, not on import: everything except `measure` works
+# without it, and a missing file has to say where to get one rather than crash here.
+DSH_CONFIG = Path(os.environ.get("DSH_CONFIG") or BENCH.parent / "dsh-config" / "dsh" / "cordis.patch.yml")
 CREDS = Path.home() / ".dsh" / ".credentials.yaml"
 
 DAYS = 30.0            # a month, for the windows
@@ -505,7 +510,7 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
     dr.text((M, H - 62), "Every model every plan in data/plans.json that Terminal-Bench "
             "ranks. The chart and its controls are borrowed from linearbench.", font=f_tick,
             fill=(110, 118, 129))
-    dr.text((W - M, H - 62), f"dsh-config · {date.today().isoformat()}", font=f_tick,
+    dr.text((W - M, H - 62), f"model-bench · {date.today().isoformat()}", font=f_tick,
             fill=(110, 118, 129), anchor="ra")
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -659,7 +664,7 @@ def config_routes() -> dict[str, list[str]]:
     """
     routes: dict[str, list[str]] = {}
     provider = ""
-    for line in CONFIG.read_text(encoding="utf-8").splitlines():
+    for line in DSH_CONFIG.read_text(encoding="utf-8").splitlines():
         block = re.match(r"^      ([a-z][a-z0-9-]*):$", line)
         if block:
             provider = block.group(1)
@@ -699,11 +704,19 @@ def menu(models: dict) -> list[str]:
     """The policy, the measured table and the DSH config must name the same rows."""
     problems = [f"{i} is admitted but has no row in models.csv"
                 for i in ADMITTED if i not in models]
+    if not DSH_CONFIG.is_file():
+        # Half of this check reads a file in another repository. Say which one and how
+        # to get it, rather than raising a FileNotFoundError nobody can act on.
+        return problems + [
+            f"cannot read the DSH menu at {DSH_CONFIG}",
+            "clone it beside this repo (git clone https://github.com/jacano/dsh-config),"
+            " or set DSH_CONFIG to dsh/cordis.patch.yml",
+        ]
     routes = config_routes()
     configured = set(routes)
     problems += [f"{i} is served by {', '.join(p)}: an id has to name one route"
                  for i, p in routes.items() if len(p) > 1]
-    problems += [f"{i} is in the policy but not in dsh/cordis.patch.yml"
+    problems += [f"{i} is in the policy but not in the DSH menu"
                  for i in set(ADMITTED) - configured]
     # Only rows this repo has measured are governed here. An id the benchmark has
     # never measured is the owner's arrangement, not this file's business.
@@ -996,7 +1009,7 @@ def agentic_solved() -> bool:
 
 def cmd_agentic(args) -> int:
     # Out of the repo and out of WORK: agentic_reset wipes WORK every round, and a
-    # stray file in bench/ is one `git add` away from being committed.
+    # stray file here is one `git add` away from being committed.
     scratch = Path(tempfile.mkdtemp(prefix="bench-agentic-"))
     patch = scratch / "patch.yml"
     patch.write_text(PATCH.format(provider=args.provider, model=args.model), encoding="utf-8")
@@ -1039,7 +1052,7 @@ def main() -> int:
     pl.set_defaults(fn=cmd_plan)
 
     ch = sub.add_parser("chart", help="the Pareto picture: price against the board")
-    ch.add_argument("--out", default="bench/frontier.png", help="where to write the png")
+    ch.add_argument("--out", default="frontier.png", help="where to write the png")
     ch.add_argument("--html", help="write an interactive page instead of the png")
     ch.add_argument("--mix", help="fresh,cache,out - price a request of that shape")
     ch.add_argument("--today", type=date.fromisoformat,
