@@ -412,8 +412,8 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
     dr.text((M, 44), "Terminal-Bench against price, every model every plan sells",
             font=f_title, fill=ink)
     dr.text((M, 84), subject, font=f_lab, fill=dim)
-    dr.text((M, 112), "our cost: list rate x multiplier x fee / ceiling - the tightest of the "
-                      "plan's credits, week and 5-hour windows", font=f_tick, fill=dim)
+    dr.text((M, 112), "our cost: list rate x multiplier x fee / ceiling - the tightest of "
+                      "credits, allowance, week or 5-hour cap", font=f_tick, fill=dim)
 
     for tb in range(int(y0) // 10 * 10, int(y1) + 1, 10):
         if tb < y0:

@@ -1,7 +1,8 @@
 # Model policy — what may enter dsh/cordis.patch.yml.
 #
-# Every number lives in models.csv (measured) or data/plans.json (priced). This
-# file only says which ids are in, so it cannot go stale on a provider's Tuesday.
+# The prices live in data/plans.json and the measurements in models.csv. This file
+# holds the gates and which ids clear them, so it carries no price that can go
+# stale on a provider's Tuesday.
 
 version: 1
 updated: 2026-11-16
