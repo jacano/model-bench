@@ -1,33 +1,13 @@
 #!/usr/bin/env python3
-"""bench — one script, what a subscription costs and what it can do.
+"""bench — what a subscription costs and what it can do.
 
-    python bench.py plan               # what a million tokens costs
-    python bench.py plan --model claude-haiku-5.5
-    python bench.py plan --today 2026-10-22
-    python bench.py chart              # the Pareto picture of the same table
-    python bench.py measure            # the stored table against the gates
-    python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
+    python bench.py plan      # what a million tokens costs, per model, per plan
+    python bench.py chart     # price against Terminal-Bench, and the frontier through it
+    python bench.py measure   # the stored rows against the gates, and the menu
+    python bench.py agentic   # one real bug in one real repository, pytest decides
 
-Four questions, in the order they cost money:
-
-  plan     what a million tokens of each kind costs, after the plan's multiplier,
-           its ceiling and its windows. Free, calls no model.
-  chart    price against Terminal-Bench, and the frontier through whatever nothing
-           beats. Free, writes a png or a page.
-  measure  speed, latency, cache, prefill, retention, errors, tool calls - and the
-           menu has to agree with the policy.
-  agentic  a real bug in a real repository, pytest decides.
-
-data/plans.json    the plans, what they publish, and the catalogue they price from
-data/tbench.json   the board: what each model does on Terminal-Bench, and through
-                   which agent
-models.csv         what each route measured on the wire, one line per route
-models-policy.yml  the gates, and which ids are admitted
-
-Nothing here edits the DSH configuration. The menu it governs is declared in
-another repository, [jacano/dsh-config](https://github.com/jacano/dsh-config), and
-`measure` reads that file to check the two agree. A sibling clone is the default;
-`DSH_CONFIG` points somewhere else.
+`measure` reads the DSH menu from jacano/dsh-config, cloned beside this repository;
+`DSH_CONFIG` points at another copy. README.md has the files and the method.
 """
 
 from __future__ import annotations
