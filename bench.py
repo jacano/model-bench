@@ -893,7 +893,7 @@ def live(model: str, tbench_score: float) -> int:
         print(f"\n  NOT FIT: {', '.join(f2 + f3)}")
         return 1
     print("\n  FIT")
-    print(f"\n  {model},,{model},{values['speed']},{values['ttft']},{values['cache']:.3f},"
+    print(f"\n  {model},{model},{values['speed']},{values['ttft']},{values['cache']:.3f},"
           f"{values['prefill']},{values['cache_loop']:.2f},{values['retention']},"
           f"{values['errors']},{values['tools']:.2f}")
     return 0
