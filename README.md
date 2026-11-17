@@ -1,14 +1,14 @@
 # model-bench
 
 What a DeepSeek Harness subscription actually costs, and what it can do: the price of a
-million tokens after the plan's multiplier and its ceiling, Terminal-Bench as capability,
-and the frontier through whatever nothing beats. The picture it publishes:
+million tokens after the plan's fee, its multiplier and its ceiling, Terminal-Bench as
+capability, and the frontier through whatever nothing beats. The picture it publishes:
 **https://jacano.github.io/model-bench/**
 
 | Repository | Holds |
 | --- | --- |
-| **model-bench** (here) | The measurement: prices, the board, the gates, the frontier, the page. |
-| [dsh-config](https://github.com/jacano/dsh-config) | The configuration these numbers choose: providers and the model menu. |
+| **model-bench** (here) | The benchmark that chooses the model menu, and the page it publishes. |
+| [dsh-config](https://github.com/jacano/dsh-config) | The DeepSeek Harness configuration: providers and the model menu. |
 | [agent-skills](https://github.com/jacano/agent-skills) | Procedures an agent follows, with the code they need. |
 
 ## Run
@@ -17,8 +17,11 @@ and the frontier through whatever nothing beats. The picture it publishes:
 python bench.py plan      # what a million tokens costs, per model, per plan
 python bench.py chart     # that table as a picture, and the frontier through it
 python bench.py measure   # the stored rows against the gates, and the menu
-python bench.py agentic   # one real bug in one real repository, pytest decides
+python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 ```
+
+`agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
+with `--model` and `--tbench` measures one route instead of checking the stored table.
 
 Python 3. `plan` needs nothing else; `chart` draws the png with Pillow (`pip install
 pillow`); `chart --html` writes the page without it; `agentic` runs DSH headless, so it needs

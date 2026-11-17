@@ -4,7 +4,7 @@
     python bench.py plan      # what a million tokens costs, per model, per plan
     python bench.py chart     # price against Terminal-Bench, and the frontier through it
     python bench.py measure   # the stored rows against the gates, and the menu
-    python bench.py agentic   # one real bug in one real repository, pytest decides
+    python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 
 `measure` reads the DSH menu from jacano/dsh-config, cloned beside this repository;
 `DSH_CONFIG` points at another copy. README.md has the files and the method.
@@ -412,8 +412,8 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
     dr.text((M, 44), "Terminal-Bench against price, every model every plan sells",
             font=f_title, fill=ink)
     dr.text((M, 84), subject, font=f_lab, fill=dim)
-    dr.text((M, 112), "our cost: the plan's list rate x its multiplier, divided by the ceiling "
-                      "that plan puts on the model", font=f_tick, fill=dim)
+    dr.text((M, 112), "our cost: list rate x multiplier x fee / ceiling - the tightest of the "
+                      "plan's credits, week and 5-hour windows", font=f_tick, fill=dim)
 
     for tb in range(int(y0) // 10 * 10, int(y1) + 1, 10):
         if tb < y0:
@@ -1041,7 +1041,7 @@ def main() -> int:
     m.add_argument("--model", help="one route to measure live; without it, the stored table "
                                    "is checked against the gates")
     m.add_argument("--tbench", type=float, help="that model's board score, for the floor")
-    m.add_argument("--provider", default="command-code", choices=sorted(GATEWAYS),
+    m.add_argument("--provider", default="opendesign", choices=sorted(GATEWAYS),
                    help="which plan serves it")
     m.set_defaults(fn=cmd_measure)
 
