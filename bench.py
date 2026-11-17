@@ -343,7 +343,6 @@ def pareto(rows: list[dict]) -> list[dict]:
 PAGE_FILE = BENCH / "page.html"
 
 
-
 def write_page(rows: list[dict], store: dict, floor: float, subject: str,
                path: Path) -> None:
     """Fill the template and write it: the page the site serves."""
@@ -371,7 +370,6 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str,
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html, encoding="utf-8")
     print(f"written: {path}  ({len(rows)} models)")
-
 
 
 def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
