@@ -4,11 +4,9 @@
 # holds the gates and which ids clear them, so it carries no price that can go
 # stale on a provider's Tuesday.
 
-version: 1
 updated: 2026-11-16
 
 criteria:
-  method: "price and Terminal-Bench, then the agentic run"
   phases:
     static:
       tbench_min: 38.0
