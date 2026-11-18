@@ -144,7 +144,7 @@
 
   <footer>
     <span>Every model every plan in <code>data/plans.json</code> that Terminal-Bench ranks.
-      Hover a point for its real cost per turn and its rates.</span>
+      Hover a point for its real rates and the list price.</span>
     <span>The chart and its controls are borrowed from
       <a href="https://linearbench.pages.dev/">linearbench</a>; the axes are not.
       <a href="https://github.com/jacano/model-bench">Source</a> ·
@@ -270,15 +270,15 @@ function render() {
 
 function showTip(r, e) {
   const colour = COLOURS[r.provider] || "#94a3b8";
-  const rows = [
-    ["Terminal-Bench", r.tb.toFixed(1)],
-    [UNIT, money(r.cost)],
+  const rows = [["Terminal-Bench", r.tb.toFixed(1)]];
+  if (UNIT) rows.push([UNIT, money(r.cost)]);
+  rows.push(
     ["list input", rate(r.list && r.list.input)],
     ["input",  rate(r.eff.input)],
     ["cache read",  rate(r.eff.cache)],
     ["cache write", rate(r.eff.cache_write)],
     ["output", rate(r.eff.output)]
-  ];
+  );
   const state_word = r.state === "admitted" ? "admitted" :
                      (r.state === "unmeasured" ? "unmeasured" : "measured, fails");
   tip.innerHTML =

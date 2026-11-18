@@ -14,17 +14,18 @@ capability, and the frontier through whatever nothing beats. The picture it publ
 ## Run
 
 ```bash
-python bench.py plan      # what a million tokens costs, and what one real turn costs
+python bench.py plan      # what a million tokens costs, per model, per plan
 python bench.py chart     # price against the board, and the frontier through it
-python bench.py chart --input   # price a million input tokens instead
+python bench.py chart --workload   # the same, priced per real turn
 python bench.py measure   # the stored rows against the gates, and the menu
 python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 ```
 
-The chart prices a **turn** — the tokens one call moves — at the shape in
-`data/workload.json`, measured from the console's usage records, because a subscription is
-spent on turns and not on a million input tokens. `--mix fresh,cache,out` prices another
-shape; `--input` keeps the old axis, which compares models on the same footing.
+The chart's axis is a million input tokens, so two providers compare without a workload
+assumption. `--workload` prices a **turn** instead — the tokens one call moves — at the
+shape in `data/workload.json`, measured from the console's usage records, and `--mix
+fresh,cache,out` prices another shape. A turn is what a fee actually buys, but its shape
+belongs to the sessions, not to the provider.
 
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.

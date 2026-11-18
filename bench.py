@@ -303,25 +303,15 @@ def cmd_plan(args) -> int:
         floor = GATES["static"]["tbench_min"]
         rows = [r for r in rows if (board_score(boards, r["model"]) or 0) >= floor]
 
-    mix = workload_mix()
     print(f"dollars per million tokens, on {day.isoformat()}")
-    print("  the multiplier, the ceiling and the hour are already in these numbers")
-    if mix:
-        print(f"  a turn is {mix[0]:,} fresh + {mix[1]:,} cache + {mix[2]:,} out tokens")
-    print()
-    head = (f"  {'model':34s} {'tb':>4s} {'plan':12s} {'input':>10s} {'cache read':>11s} "
-            f"{'cache write':>12s} {'output':>10s}")
-    if mix:
-        head += f" {'per turn':>10s}"
-    print(head)
+    print("  the multiplier, the ceiling and the hour are already in these numbers\n")
+    print(f"  {'model':34s} {'tb':>4s} {'plan':14s} {'input':>10s} {'cache read':>11s} "
+          f"{'cache write':>12s} {'output':>10s}")
     for r in sorted(rows, key=lambda x: (x["input"], x["provider"])):
         tb = board_score(boards, r["model"])
         write = f"{r['cache_write']:>12.5f}" if "cache_write" in r else f"{'-':>12s}"
-        line = (f"  {r['model'][:34]:34s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:12s} "
-                f"{r['input']:>10.5f} {r['cache']:>11.5f} {write} {r['output']:>10.5f}")
-        if mix:
-            line += f" {turn_cost(r, mix):>10.6f}"
-        print(line)
+        print(f"  {r['model'][:34]:34s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:14s} "
+              f"{r['input']:>10.5f} {r['cache']:>11.5f} {write} {r['output']:>10.5f}")
     return 0
 
 
@@ -542,10 +532,10 @@ def cmd_chart(args) -> int:
             raise SystemExit("--mix wants fresh,cache,out as three integers")
         if len(mix) != 3 or min(mix) < 0:
             raise SystemExit("--mix wants three token counts, fresh,cache,out")
-        if args.input:
-            raise SystemExit("--mix and --input are two plots; pick one")
-    elif not args.input:
+    elif args.workload:
         mix = workload_mix()
+        if not mix:
+            raise SystemExit(f"no workload shape in {WORKLOAD_FILE}")
     rows = chart_rows(store, boards, args.today or date.today(), mix)
     if not rows:
         print("nothing to draw")
@@ -555,7 +545,7 @@ def cmd_chart(args) -> int:
 
     subject = ("dollars per million input tokens" if not mix else
                f"dollars per turn of {mix[0]:,} fresh + {mix[1]:,} cache + {mix[2]:,} out")
-    unit = "per million input tokens" if not mix else "per turn"
+    unit = None if not mix else "per turn"
 
     if args.html:
         write_page(rows, store, floor, subject, unit, Path(args.html))
@@ -1072,8 +1062,8 @@ def main() -> int:
     ch.add_argument("--out", default="frontier.png", help="where to write the png")
     ch.add_argument("--html", help="write an interactive page instead of the png")
     ch.add_argument("--mix", help="fresh,cache,out - price a turn of that shape")
-    ch.add_argument("--input", action="store_true",
-                    help="plot the million-input-token rate instead of a real turn")
+    ch.add_argument("--workload", action="store_true",
+                    help="price the turn measured in data/workload.json")
     ch.add_argument("--today", type=date.fromisoformat,
                     help="a date (YYYY-MM-DD), for the promos of that day")
     ch.set_defaults(fn=cmd_chart)
