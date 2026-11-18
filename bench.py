@@ -51,8 +51,8 @@ GATEWAYS = {
 }
 
 # What "a million tokens" is made of, in tokens. `blended` is the convention Real API
-# Pricing publishes, so the two can be read side by side; `chat` is the shape where a
-# prefix is never reused; `yours` is the shape the recorded calls actually had.
+# Pricing publishes, so the two can be read side by side; `yours` is the shape the
+# recorded calls actually had. Anything else is `--mix`.
 def measured_mix() -> tuple[int, int, int] | None:
     try:
         rows = usage()["rows"]
@@ -69,8 +69,6 @@ def metrics() -> dict:
     out = {
         "blended": ((25_000, 970_000, 5_000),
                     "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out"),
-        "chat": ((700_000, 0, 300_000),
-                 "dollars per million tokens at 70% fresh, 30% out, no cache"),
     }
     yours = measured_mix()
     if yours:
