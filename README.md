@@ -16,17 +16,19 @@ capability, and the frontier through whatever nothing beats. The picture it publ
 ```bash
 python bench.py plan      # what a million tokens costs, per model, per plan
 python bench.py chart     # price against the board, and the frontier through it
+python bench.py chart --by blended   # price a mixed million, 97% cache / 2.5% fresh / 0.5% out
 python bench.py verify    # the console's recorded calls against the plan's price
 python bench.py measure   # the stored rows against the gates, and the menu
 python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 ```
 
 The chart's axis is a million input tokens, so two providers compare without a workload
-assumption; `--mix fresh,cache,out` prices a turn of a shape you name. `verify` is the other
-kind of evidence: it recomputes fifty calls the console recorded, from their unit prices, and
-checks that the block's price is the price that was billed. `measure --api responses` sends a
-route down the Responses shape, which is the one OpenDesign serves, instead of chat
-completions.
+assumption; `--mix fresh,cache,out` prices a turn of a shape you name, and `--by blended` or
+`--by chat` price a mixed million instead (the shapes the page's toggles switch between, and
+the numbers the Real API Pricing site publishes). `verify` is the other kind of evidence: it
+recomputes fifty calls the console recorded, from their unit prices, and checks that the
+block's price is the price that was billed. `measure --api responses` sends a route down the
+Responses shape, which is the one OpenDesign serves, instead of chat completions.
 
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.

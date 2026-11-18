@@ -120,6 +120,11 @@
   </header>
 
   <div class="bar">
+    <div class="seg" id="metric">
+      <button data-v="input" aria-pressed="true">Input</button>
+      <button data-v="blended">Blended</button>
+      <button data-v="chat">Chat</button>
+    </div>
     <div class="seg" id="scale">
       <button data-v="log" aria-pressed="true">Log</button>
       <button data-v="linear">Linear</button>
@@ -158,12 +163,21 @@ const COLOURS = __COLOURS__;
 const PLANS = __PLANS__;
 const FLOOR = __FLOOR__;
 const UNIT = __UNIT__;
+const METRICS = __METRICS__;
+const DEFAULT_METRIC = __DEFAULT_METRIC__;
+let metric = DEFAULT_METRIC;
 const state = { scale:"log", dir:"asc", front:true, floor:true, labels:true, hidden:new Set() };
 const W = 1400, H = 730, M = { l: 74, r: 28, t: 22, b: 58 };
 const svg = document.getElementById("chart");
 const tip = document.getElementById("tip");
 
-const cost  = r => r.cost;
+const costOf = r => {
+  const m = METRICS[metric];
+  if (!m.mix) return r.eff.input;
+  const [f, c, o] = m.mix;
+  return (f * r.eff.input + c * r.eff.cache + o * r.eff.output) / 1e6;
+};
+const cost  = r => costOf(r);
 const money = v => v >= 0.01 ? "$" + v.toFixed(3) : "$" + v.toFixed(5);
 const rate  = v => v == null ? "—" : money(v);
 
@@ -271,7 +285,7 @@ function render() {
 function showTip(r, e) {
   const colour = COLOURS[r.provider] || "#94a3b8";
   const rows = [["Terminal-Bench", r.tb.toFixed(1)]];
-  if (UNIT) rows.push([UNIT, money(r.cost)]);
+  if (metric !== "input") rows.push(["cost", money(costOf(r))]);
   rows.push(
     ["list input", rate(r.list && r.list.input)],
     ["input",  rate(r.eff.input)],
@@ -306,6 +320,10 @@ document.querySelectorAll(".seg button").forEach(btn => {
     const group = btn.parentElement.id;
     if (group === "extra") state[btn.dataset.v] = !state[btn.dataset.v];
     else state[group] = btn.dataset.v;
+    if (group === "metric") {
+      metric = btn.dataset.v;
+      document.getElementById("subject").textContent = METRICS[metric].subject;
+    }
     btn.parentElement.querySelectorAll("button").forEach(b =>
       b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
     render();
@@ -326,7 +344,9 @@ document.querySelectorAll(".chip").forEach(chip => {
   });
 });
 
-document.getElementById("subject").textContent = __SUBJECT__;
+document.querySelectorAll("#metric button").forEach(b =>
+  b.setAttribute("aria-pressed", b.dataset.v === metric ? "true" : "false"));
+document.getElementById("subject").textContent = METRICS[metric].subject;
 document.getElementById("stamp").textContent = "generated __GENERATED__";
 render();
 </script>
