@@ -270,6 +270,11 @@ def plan_rows(store: dict, day: date, want: str | None = None) -> list[dict]:
     for provider, plan in store["providers"].items():
         entries = ([{"id": slug, "catalog": slug} for slug in cat]
                    if plan["models"] == "catalog" else plan["models"])
+        if plan.get("sells_from_allowances"):
+            # The plan's own table is its model list: a model it does not price is not
+            # sold, and must not fall back to the whole pool and look five times cheaper.
+            entries = [m for m in entries
+                       if allowance(plan, cat[m["catalog"]]["name"]) is not None]
         for m in entries:
             if target:
                 bare = norm(re.sub(r"\([^)]*\)", "", m["id"]))
