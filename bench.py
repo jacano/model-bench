@@ -358,6 +358,10 @@ def cmd_verify(args) -> int:
 
     gap = ours - theirs
     rounded = len(doc["rows"]) * 0.00005 * scale
+    total_fresh = sum(r["inputTokens"] - r["cacheReadTokens"] for r in doc["rows"])
+    total_cache = sum(r["cacheReadTokens"] for r in doc["rows"])
+    total_out = sum(r["outputTokens"] for r in doc["rows"])
+    total = total_fresh + total_cache + total_out
     print(f"usage: {len(doc['rows'])} calls of {doc['model']} on {doc['date']}")
     print(f"  list:         recomputed from the unit prices, worst {worst_list:.4f} (their rounding)")
     print(f"  multiplier:   {doc['rows'][0]['multiplier']}, the block's factor")
@@ -365,6 +369,15 @@ def cmd_verify(args) -> int:
     print(f"  our cost:     {ours:.6f} for the {len(doc['rows'])} calls")
     print(f"  the plan:     {theirs:.6f} at fee / ceiling ({fee:.0f} / {ceiling:.0f})")
     print(f"  gap:          {gap:+.6f}; they round every contribution to 4 decimals, a band of {rounded:.6f}")
+    if total:
+        entry = block[doc["rows"][0]["model"]]
+        def at(mix):
+            return (mix[0] * entry["input"] + mix[1] * entry["cache"] + mix[2] * entry["output"]) / 1e6
+        real = at((total_fresh / total * 1e6, total_cache / total * 1e6, total_out / total * 1e6))
+        blend = at((25_000, 970_000, 5_000))
+        print(f"  workload:     fresh {total_fresh/total:.2%}, cache {total_cache/total:.2%}, "
+              f"out {total_out/total:.2%} of the tokens")
+        print(f"  blend:        2.5 / 97 / 0.5 prices a million at {blend/real:.2f}x the measured shape")
 
     if worst_list > 0.0002:
         problems.append(f"the list charge is off by {worst_list:.4f} a row")
