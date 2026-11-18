@@ -978,14 +978,15 @@
     "week_pct": 50,
     "five_hours_pct": 20
    },
-   "note": "OpenCode Go, $10 a month: one allowance per model instead of one pool, and the token rates are the list prices, so the bulk discount arrives as a bigger allowance rather than a cheaper token. The 5-hour cap is 20% of a model's monthly allowance and the week is 50%; the month resets with the paid period. GLM-5.3's $500 is a raised limit good through 2026-11-22 (Go Plus $1,000); the page does not say what it becomes after that, and GLM-5.2 stands at $60. Qwen4 Max and Hy4 are sold by the plan but publish no rate the models endpoint serves, so they are left out, and so are the four free models. Rates for the models the endpoint does not serve come from the catalogue in this file and are marked rate_source: catalogue.",
+   "note": "OpenCode Go, $10 a month: one allowance per model instead of one pool, and the token rates are the list prices, so the bulk discount arrives as a bigger allowance rather than a cheaper token. The 5-hour cap is 20% of a model's monthly allowance and the week is 50%; the month resets with the paid period. GLM-5.3's $500 is a raised limit good through 2026-11-22 (Go Plus $1,000); the page does not say what it becomes after that, and GLM-5.2 stands at $60. Qwen4 Max and Hy4 are sold by the plan but publish no rate the models endpoint serves, so they are left out, and so are the four free models. Cached write is stored where a source publishes one, and left out where it does not: GLM-5.3, DeepSeek, MiniMax, MiMo and the rest sell no cached-write price. Rates for the models the endpoint does not serve come from the catalogue in this file and are marked rate_source: catalogue.",
    "models": [
     {
      "id": "kimi-k3",
      "monthly_limit_usd": 15,
      "input": 3.0,
      "cache": 0.3,
-     "output": 15.0
+     "output": 15.0,
+     "cache_write": 3.0
     },
     {
      "id": "kimi-k3.1-pro",
@@ -1000,7 +1001,8 @@
      "monthly_limit_usd": 15,
      "input": 2.0,
      "cache": 0.25,
-     "output": 6.0
+     "output": 6.0,
+     "cache_write": 2.5
     },
     {
      "id": "grok-4.7",
@@ -1058,7 +1060,9 @@
      "monthly_limit_usd": 15,
      "input": 0.2,
      "cache": 0.02,
-     "output": 1.2
+     "output": 1.2,
+     "cache_write": 0.25,
+     "cache_write_note": "30m tier; the 12h tier is 0.5"
     },
     {
      "id": "minimax-m3",
@@ -1080,7 +1084,8 @@
      "monthly_limit_usd": 15,
      "input": 0.1,
      "cache": 0.01,
-     "output": 0.5
+     "output": 0.5,
+     "cache_write": 0.125
     },
     {
      "id": "minimax-m3.1-flash",
@@ -1095,7 +1100,9 @@
      "monthly_limit_usd": 15,
      "input": 0.1,
      "cache": 0.01,
-     "output": 0.5
+     "output": 0.5,
+     "cache_write": 0.125,
+     "cache_write_note": "30m tier; the 12h tier is 0.25"
     },
     {
      "id": "hy3",
@@ -1111,14 +1118,16 @@
      "input": 0.4,
      "cache": 0.08,
      "output": 1.6,
-     "rate_source": "catalogue"
+     "rate_source": "catalogue",
+     "cache_write": 0.5
     },
     {
      "id": "qwen3.8-flash",
      "monthly_limit_usd": 30,
      "input": 0.15,
      "cache": 0.016,
-     "output": 0.47
+     "output": 0.47,
+     "cache_write": 0.2
     },
     {
      "id": "glm-5.3-flash",
