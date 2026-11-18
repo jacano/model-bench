@@ -50,16 +50,32 @@ GATEWAYS = {
     "opengateway": ("https://apis.opengateway.ai/v1", "OPENGATEWAY_API_KEY"),
 }
 
-# What "a million tokens" is made of, in tokens. `input` prices a million fresh input
-# tokens and is the axis that compares models without a workload assumption; the other
-# two are conventions for a mixed shape, so the price is one number per plan.
-METRICS = {
-    "input": (None, "dollars per million input tokens"),
-    "blended": ((25_000, 970_000, 5_000),
-                "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out"),
-    "chat": ((700_000, 0, 300_000),
-             "dollars per million tokens at 70% fresh, 30% out, no cache"),
-}
+# What "a million tokens" is made of, in tokens. `blended` is the convention Real API
+# Pricing publishes, so the two can be read side by side; `chat` is the shape where a
+# prefix is never reused; `yours` is the shape the recorded calls actually had.
+def measured_mix() -> tuple[int, int, int] | None:
+    try:
+        rows = usage()["rows"]
+        fresh = sum(r["inputTokens"] - r["cacheReadTokens"] for r in rows)
+        cache = sum(r["cacheReadTokens"] for r in rows)
+        out = sum(r["outputTokens"] for r in rows)
+        total = fresh + cache + out
+        return (round(fresh / total * 1e6), round(cache / total * 1e6), round(out / total * 1e6))
+    except (OSError, KeyError, TypeError, ValueError, ZeroDivisionError):
+        return None
+
+
+def metrics() -> dict:
+    out = {
+        "blended": ((25_000, 970_000, 5_000),
+                    "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out"),
+        "chat": ((700_000, 0, 300_000),
+                 "dollars per million tokens at 70% fresh, 30% out, no cache"),
+    }
+    yours = measured_mix()
+    if yours:
+        out["yours"] = (yours, "dollars per million tokens at the shape your calls measured")
+    return out
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -468,7 +484,7 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str, unit: 
                 .replace("__UNIT__", json.dumps(unit))
                 .replace("__METRICS__", json.dumps(
                     {name: {"mix": shape, "subject": text}
-                     for name, (shape, text) in METRICS.items()}))
+                     for name, (shape, text) in metrics().items()}))
                 .replace("__DEFAULT_METRIC__", json.dumps(metric))
                 .replace("__GENERATED__", date.today().isoformat()))
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -604,9 +620,10 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
 def cmd_chart(args) -> int:
     """Draw the two axes that decide it: what a token costs, and what the board says."""
     store, boards = plans(), tbench()
+    shapes = metrics()
     mix = None
-    subject = METRICS["input"][1]
-    unit = None
+    subject = shapes["blended"][1]
+    unit = "per 1M tokens"
     if args.mix:
         parts = args.mix.replace(" ", "").split(",")
         try:
@@ -617,9 +634,8 @@ def cmd_chart(args) -> int:
             raise SystemExit("--mix wants three token counts, fresh,cache,out")
         subject = f"dollars per turn of {mix[0]:,} fresh + {mix[1]:,} cache + {mix[2]:,} out"
         unit = "per turn"
-    elif args.by != "input":
-        mix, subject = METRICS[args.by]
-        unit = "per 1M tokens"
+    else:
+        mix, subject = shapes[args.by]
     rows = chart_rows(store, boards, args.today or date.today(), mix)
     if not rows:
         print("nothing to draw")
@@ -1169,8 +1185,8 @@ def main() -> int:
     ch.add_argument("--out", default="frontier.png", help="where to write the png")
     ch.add_argument("--html", help="write an interactive page instead of the png")
     ch.add_argument("--mix", help="fresh,cache,out - price a turn of that shape")
-    ch.add_argument("--by", default="input", choices=sorted(METRICS),
-                    help="what the x axis prices: input, or a mixed million tokens")
+    ch.add_argument("--by", default="blended", choices=sorted(metrics()),
+                    help="what the x axis prices: a mixed million tokens")
     ch.add_argument("--today", type=date.fromisoformat,
                     help="a date (YYYY-MM-DD), for the promos of that day")
     ch.set_defaults(fn=cmd_chart)

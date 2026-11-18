@@ -120,11 +120,7 @@
   </header>
 
   <div class="bar">
-    <div class="seg" id="metric">
-      <button data-v="input" aria-pressed="true">Input</button>
-      <button data-v="blended">Blended</button>
-      <button data-v="chat">Chat</button>
-    </div>
+    <div class="seg" id="metric"></div>
     <div class="seg" id="scale">
       <button data-v="log" aria-pressed="true">Log</button>
       <button data-v="linear">Linear</button>
@@ -314,6 +310,10 @@ function moveTip(e) {
   tip.style.left = x + "px";
   tip.style.top = y + "px";
 }
+
+document.getElementById("metric").innerHTML = Object.keys(METRICS).map(k =>
+  `<button data-v="${k}" aria-pressed="${k === metric ? "true" : "false"}">${k[0].toUpperCase() + k.slice(1)}</button>`
+).join("");
 
 document.querySelectorAll(".seg button").forEach(btn => {
   btn.addEventListener("click", () => {
