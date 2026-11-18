@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16",
+ "updated": "2026-11-18",
  "about": "Plans a provider sells, the prices it publishes (evidence: nothing reads them), and the catalogue Command Code prices its models from. The turn (91.500 tokens) and the exchange rate are constants in bench.py, where they are commented.",
  "catalog": {
   "claude-fable-5-2": {
@@ -712,7 +712,7 @@
    "billing": "monthly",
    "fee_usd": 10.0,
    "credits_usd": 100.0,
-   "note": "every row of catalog-2026-11-10.csv; list prices are off-peak (17 h/day), weekdays 01-04 and 06-10 UTC double. The plan sells $100 of usage for $10, so a dollar of usage costs ten cents. Since 2026-11-16 the page also prints a per-model allowance - $100 on DeepSeek V4.1 Flash, GLM-5.3 Flash and Ling 3.1 Flash, $70 on Hy3 and Qwen 3.8 27B - and a processing fee on top of the $10, unquantified. The same catalogue is sold at $1 for $10 of usage, also ten cents a dollar: at a thousand requests a month the cheap tier is enough and costs a tenth.",
+   "note": "every row of catalog-2026-11-10.csv; list prices are off-peak (17 h/day), weekdays 01-04 and 06-10 UTC double. The plan sells $100 of usage for $10, so a dollar of usage costs ten cents. Since 2026-11-16 the page also prints a per-model allowance - $100 on DeepSeek V4.1 Flash, GLM-5.3 Flash and Ling 3.1 Flash, $70 on Hy3 and Qwen 3.8 27B - and a processing fee on top of the $10, unquantified. The same catalogue is sold at $1 for $10 of usage, also ten cents a dollar: at a thousand requests a month the cheap tier is enough and costs a tenth. Page 2026-11-18: the page now names five plans - Go at $1 for $10 of credits, GOAT as above, Max at $100 for $150 ($300 on MiniMax M3), Provider at $15 pay-as-you-go with no markup, Teams at $40 pooled. GOAT's own figures did not move.",
    "models": "catalog",
    "credits_row": [
     10,
@@ -811,7 +811,7 @@
     "week_usd": 55.0,
     "five_hours_usd": 18.0
    },
-   "note": "credit multiplier per model, applied to the price OpenDesign publishes; $10 buys $220 of usage, so a dollar costs 4.5 cents. Go has a 7-day and a 5-hour window",
+   "note": "credit multiplier per model, applied to the price OpenDesign publishes; $10 buys $220 of usage, so a dollar costs 4.5 cents. Go has a 7-day and a 5-hour window. Page 2026-11-18: three more tiers above Go (Plus $20 for 310, Pro $100 for 780, Max $200 for 1,410, with 20, 120 and 300 of Top Model credits and only a 7-day window), MiMo V2.6 Flash and Pro now cost 4x where they cost 1x, and DeepSeek V4.1 Flash carries a 0.25x off-peak promo with no dates published. The page's Coding Plan table names eleven models and carries no Claude, GPT or GLM-5.3 FlashX row; those stay in this block as the console showed them on 2026-11-16.",
    "models": [
     {
      "id": "deepseek-v4.1-flash",
@@ -840,19 +840,21 @@
     },
     {
      "id": "mimo-v2.6-pro",
-     "factor": 1.0,
+     "factor": 4.0,
      "input": 0.435,
      "cache": 0.0036,
      "output": 0.87,
-     "cache_write": 0.435
+     "cache_write": 0.435,
+     "multiplier_note": "page 2026-11-18: 4x, where the earlier table said 1x"
     },
     {
      "id": "mimo-v2.6-flash",
-     "factor": 1.0,
+     "factor": 4.0,
      "input": 0.14,
      "cache": 0.0028,
      "output": 0.28,
-     "cache_write": 0.14
+     "cache_write": 0.14,
+     "multiplier_note": "page 2026-11-18: 4x, where the earlier table said 1x"
     },
     {
      "id": "deepseek-v4-pro",
@@ -950,7 +952,7 @@
    "billing": "usage",
    "fee_usd": null,
    "credits_usd": null,
-   "note": "pay as you go: no ceiling and no windows, you pay for what you use. The list is 0,30 / 1,20 / 0,006 per million and the eco tier is published at -90 %, which is what `factor` says; `billed_factor` is what the invoice came to - 612,98M of input plus 548,5M of cache reads plus 1,37M of output for 4,61 dollars, an effective input of about 0,0067 per million. Context over 256K is billed at 2x, and the discount may end by notice.",
+   "note": "pay as you go: no ceiling and no windows, you pay for what you use. The list is 0,30 / 1,20 / 0,006 per million and the eco tier is published at -90 %, which is what `factor` says; `billed_factor` is what the invoice came to - 612,98M of input plus 548,5M of cache reads plus 1,37M of output for 4,61 dollars, an effective input of about 0,0067 per million. Context over 256K is billed at 2x, and the discount may end by notice. Page 2026-11-18: https://opengateway.ai/pricing answers 404; the rates below are the ones read on 2026-11-16.",
    "sources": {
     "pricing": "https://opengateway.ai/pricing",
     "credits": "https://opengateway.ai/pricing"
@@ -966,6 +968,216 @@
      "cache_write": 0.0067
     }
    ]
+  },
+  "opencode": {
+   "plan": "Go",
+   "billing": "monthly",
+   "fee_usd": 10.0,
+   "credits_usd": null,
+   "windows": {
+    "week_pct": 50,
+    "five_hours_pct": 20
+   },
+   "note": "OpenCode Go, $10 a month: one allowance per model instead of one pool, and the token rates are the list prices, so the bulk discount arrives as a bigger allowance rather than a cheaper token. The 5-hour cap is 20% of a model's monthly allowance and the week is 50%; the month resets with the paid period. GLM-5.3's $500 is a raised limit good through 2026-11-22 (Go Plus $1,000); the page does not say what it becomes after that, and GLM-5.2 stands at $60. Qwen4 Max and Hy4 are sold by the plan but publish no rate the models endpoint serves, so they are left out, and so are the four free models. Rates for the models the endpoint does not serve come from the catalogue in this file and are marked rate_source: catalogue.",
+   "models": [
+    {
+     "id": "kimi-k3",
+     "monthly_limit_usd": 15,
+     "input": 3.0,
+     "cache": 0.3,
+     "output": 15.0
+    },
+    {
+     "id": "kimi-k3.1-pro",
+     "monthly_limit_usd": 15,
+     "input": 2.0,
+     "cache": 0.2,
+     "output": 10.0,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "qwen3.8-max",
+     "monthly_limit_usd": 15,
+     "input": 2.0,
+     "cache": 0.25,
+     "output": 6.0
+    },
+    {
+     "id": "grok-4.7",
+     "monthly_limit_usd": 15,
+     "input": 2.0,
+     "cache": 0.5,
+     "output": 6.0
+    },
+    {
+     "id": "step-5-preview",
+     "monthly_limit_usd": 15,
+     "input": 1.0,
+     "cache": 0.05,
+     "output": 2.7,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "gemini-4-argon",
+     "monthly_limit_usd": 30,
+     "input": 2.0,
+     "cache": 0.1,
+     "output": 10.0
+    },
+    {
+     "id": "glm-5.2",
+     "monthly_limit_usd": 60,
+     "input": 1.4,
+     "cache": 0.26,
+     "output": 4.4
+    },
+    {
+     "id": "kimi-k2.7-code",
+     "monthly_limit_usd": 60,
+     "input": 0.95,
+     "cache": 0.19,
+     "output": 4.0
+    },
+    {
+     "id": "deepseek-v4-pro",
+     "monthly_limit_usd": 15,
+     "input": 1.74,
+     "cache": 0.145,
+     "output": 3.48
+    },
+    {
+     "id": "hy4-preview",
+     "monthly_limit_usd": 30,
+     "input": 0.834,
+     "cache": 0.042,
+     "output": 2.501,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "monthly_limit_usd": 15,
+     "input": 0.2,
+     "cache": 0.02,
+     "output": 1.2
+    },
+    {
+     "id": "minimax-m3",
+     "monthly_limit_usd": 60,
+     "input": 0.3,
+     "cache": 0.06,
+     "output": 1.2
+    },
+    {
+     "id": "mimo-v2.6-pro",
+     "monthly_limit_usd": 15,
+     "input": 0.435,
+     "cache": 0.0036,
+     "output": 0.87,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "claude-haiku-5.5",
+     "monthly_limit_usd": 15,
+     "input": 0.1,
+     "cache": 0.01,
+     "output": 0.5
+    },
+    {
+     "id": "minimax-m3.1-flash",
+     "monthly_limit_usd": 20,
+     "input": 0.15,
+     "cache": 0.015,
+     "output": 0.6,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "gpt-6-luna",
+     "monthly_limit_usd": 15,
+     "input": 0.1,
+     "cache": 0.01,
+     "output": 0.5
+    },
+    {
+     "id": "hy3",
+     "monthly_limit_usd": 60,
+     "input": 0.14,
+     "cache": 0.035,
+     "output": 0.58,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "qwen3.7-plus",
+     "monthly_limit_usd": 60,
+     "input": 0.4,
+     "cache": 0.08,
+     "output": 1.6,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "qwen3.8-flash",
+     "monthly_limit_usd": 30,
+     "input": 0.15,
+     "cache": 0.016,
+     "output": 0.47
+    },
+    {
+     "id": "glm-5.3-flash",
+     "monthly_limit_usd": 60,
+     "input": 0.15,
+     "cache": 0.03,
+     "output": 0.5
+    },
+    {
+     "id": "glm-5.3",
+     "monthly_limit_usd": 500,
+     "input": 1.4,
+     "cache": 0.26,
+     "output": 4.4
+    },
+    {
+     "id": "longcat-2.0",
+     "monthly_limit_usd": 60,
+     "input": 0.3,
+     "cache": 0.006,
+     "output": 1.2,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "mimo-v2.6-flash",
+     "monthly_limit_usd": 60,
+     "input": 0.14,
+     "cache": 0.0028,
+     "output": 0.28,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "deepseek-v4.1-flash",
+     "monthly_limit_usd": 100,
+     "input": 0.3,
+     "cache": 0.006,
+     "output": 1.2
+    },
+    {
+     "id": "muse-spark-1.3-contributor",
+     "monthly_limit_usd": 60,
+     "input": 0.1,
+     "cache": 0.002,
+     "output": 0.2,
+     "rate_source": "catalogue"
+    },
+    {
+     "id": "muse-spark-1.2-contributor",
+     "monthly_limit_usd": 60,
+     "input": 0.1,
+     "cache": 0.002,
+     "output": 0.2,
+     "rate_source": "catalogue"
+    }
+   ],
+   "sources": {
+    "pricing": "https://opencode.ai/console/go",
+    "credits": "https://opencode.ai/docs/console/go/"
+   }
   }
  }
 }

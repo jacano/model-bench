@@ -1,8 +1,18 @@
 {
  "source": "https://www.tbench.ai/",
  "benchmark": "Terminal-Bench 4.1",
- "fetched": "2026-11-16T21:00:29+01:00",
+ "fetched": "2026-11-18T09:57:37+01:00",
  "models": {
+  "copilotfusion": {
+   "label": "Copilot Fusion",
+   "score": 71.21,
+   "ci95": 2.88,
+   "agent": "GitHub Copilot",
+   "effort": "max",
+   "date": "Nov 17, 2026",
+   "cost_usd": 1987.33,
+   "tokens": 3316652076
+  },
   "opus55": {
    "label": "Opus 5.5",
    "score": 65.76,
@@ -23,6 +33,16 @@
    "cost_usd": 16492.76,
    "tokens": 15726404102
   },
+  "gemini4carbon": {
+   "label": "Gemini 4 Carbon",
+   "score": 64.55,
+   "ci95": 3.23,
+   "agent": "Antigravity CLI",
+   "effort": "high",
+   "date": "Oct 28, 2026",
+   "cost_usd": 1358.25,
+   "tokens": 3781194078
+  },
   "sonnet55": {
    "label": "Sonnet 5.5",
    "score": 63.94,
@@ -32,6 +52,26 @@
    "date": "Sep 28, 2026",
    "cost_usd": 7333.64,
    "tokens": 19413047384
+  },
+  "gpt62astra": {
+   "label": "GPT-6.2 Astra",
+   "score": 62.12,
+   "ci95": 2.3,
+   "agent": "Codex",
+   "effort": "max",
+   "date": "Nov 17, 2026",
+   "cost_usd": 1409.14,
+   "tokens": 1115258588
+  },
+  "gpt62sol": {
+   "label": "GPT-6.2 Sol",
+   "score": 61.52,
+   "ci95": 2.75,
+   "agent": "Codex",
+   "effort": "max",
+   "date": "Nov 17, 2026",
+   "cost_usd": 349.16,
+   "tokens": 1085250438
   },
   "gpt61sol": {
    "label": "GPT-6.1 Sol",
@@ -73,6 +113,16 @@
    "cost_usd": 4872.04,
    "tokens": 2343414000
   },
+  "gemini4hydrogen": {
+   "label": "Gemini 4 Hydrogen",
+   "score": 56.36,
+   "ci95": 2.97,
+   "agent": "Antigravity CLI",
+   "effort": "high",
+   "date": "Nov 12, 2026",
+   "cost_usd": 784.24,
+   "tokens": 3586959926
+  },
   "gemini4argon": {
    "label": "Gemini 4 Argon",
    "score": 55.45,
@@ -112,6 +162,16 @@
    "date": "Sep 22, 2026",
    "cost_usd": 1451.32,
    "tokens": 4977940044
+  },
+  "musewonder": {
+   "label": "Muse Wonder",
+   "score": 46.97,
+   "ci95": 3.78,
+   "agent": "Muse Code",
+   "effort": "xhigh",
+   "date": "Oct 12, 2026",
+   "cost_usd": 2452.31,
+   "tokens": 5452903717
   },
   "fable5": {
    "label": "Fable 5",
@@ -172,6 +232,16 @@
    "date": "Oct 17, 2026",
    "cost_usd": 184.89,
    "tokens": 8187123046
+  },
+  "hy4": {
+   "label": "Hy4",
+   "score": 37.88,
+   "ci95": 3.51,
+   "agent": "Claude Code",
+   "effort": "max",
+   "date": "Nov 4, 2026",
+   "cost_usd": 347.6,
+   "tokens": 5345903946
   },
   "glm53flash": {
    "label": "GLM-5.3-Flash",
@@ -243,6 +313,16 @@
    "cost_usd": 1919.83,
    "tokens": 4923348457
   },
+  "ember1": {
+   "label": "Ember-1",
+   "score": 21.82,
+   "ci95": 3.46,
+   "agent": "mini-swe-agent",
+   "effort": "none",
+   "date": "Sep 24, 2026",
+   "cost_usd": 4718.49,
+   "tokens": 11906454756
+  },
   "gpt56terra": {
    "label": "GPT-5.6 Terra",
    "score": 21.52,
@@ -262,6 +342,16 @@
    "date": "Aug 12, 2026",
    "cost_usd": 3591.58,
    "tokens": 4001923428
+  },
+  "hy4preview": {
+   "label": "Hy4 Preview",
+   "score": 19.09,
+   "ci95": 3.09,
+   "agent": "Claude Code",
+   "effort": "max",
+   "date": "Aug 28, 2026",
+   "cost_usd": 658.09,
+   "tokens": 6035957325
   },
   "gemini38flash": {
    "label": "Gemini 3.8 Flash",
@@ -372,6 +462,26 @@
    "date": "Aug 13, 2026",
    "cost_usd": 727.02,
    "tokens": 3830219168
+  },
+  "beam10": {
+   "label": "Beam 1.0",
+   "score": 6.36,
+   "ci95": 1.68,
+   "agent": "mini-swe-agent",
+   "effort": "none",
+   "date": "Oct 16, 2026",
+   "cost_usd": 220.96,
+   "tokens": 4124399942
+  },
+  "gemini31pro": {
+   "label": "Gemini 3.1 Pro",
+   "score": 2.73,
+   "ci95": 1.68,
+   "agent": "Antigravity CLI",
+   "effort": "high",
+   "date": "Feb 19, 2026",
+   "cost_usd": 3651.15,
+   "tokens": 7932198780
   },
   "gpt54mini": {
    "label": "GPT-5.4 Mini",

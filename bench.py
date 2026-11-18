@@ -298,7 +298,7 @@ def cmd_plan(args) -> int:
 # --------------------------------------------------------------------------- chart
 
 CHART_COLOURS = {"open-design": (96, 165, 250), "opengateway": (167, 139, 250),
-                 "command-code": (251, 146, 60)}
+                 "command-code": (251, 146, 60), "opencode": (45, 212, 191)}
 
 
 def chart_rows(store: dict, boards: dict, day: date, mix=None) -> list[dict]:
