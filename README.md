@@ -24,10 +24,12 @@ python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 
 The chart's axis is a million tokens at the blended shape: 97% cache, 2.5% fresh, 0.5% out,
 the convention Real API Pricing publishes, so the two can be read side by side. `--mix
-fresh,cache,out` prices another shape. `verify` is the other kind of evidence: it recomputes
-fifty calls the console recorded, from their unit prices, and checks that the block's price
-is the price that was billed. `measure --api responses` sends a route down the Responses
-shape, which is the one OpenDesign serves, instead of chat completions.
+fresh,cache,out` prices another shape. A model that prices peak hours separately (the
+DeepSeek family on Command Code) gets two points, off-peak and peak, instead of an average
+that is neither. `verify` is the other kind of evidence: it recomputes fifty calls the
+console recorded, from their unit prices, and checks that the block's price is the price
+that was billed. `measure --api responses` sends a route down the Responses shape, which is
+the one OpenDesign serves, instead of chat completions.
 
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.

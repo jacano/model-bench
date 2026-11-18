@@ -169,19 +169,6 @@ def load_policy() -> tuple[dict, set]:
 GATES, ADMITTED = load_policy()
 # --------------------------------------------------------------------------- plan: money
 
-def blend_of(row: dict) -> float:
-    """The week, weighted: peak hours are a share of it, and they cost more.
-
-    The catalogue carries the shop's own words ("Off-peak shown (17h/day) · peak
-    $0.30 / $1.20") already reduced to `peak_hours_per_day` and
-    `peak_multiplier`; a row with neither has one price, and 1,0 is not a guess.
-    """
-    hours, mult = row.get("peak_hours_per_day"), row.get("peak_multiplier")
-    if not hours or not mult:
-        return 1.0
-    return 1.0 + (hours / 24) * (5 / 7) * (mult - 1.0)
-
-
 def allowance(plan: dict, name: str) -> float | None:
     """A plan may cap a single model below its total: "an allowance"."""
     best = None
@@ -270,17 +257,24 @@ def plan_rows(store: dict, day: date, want: str | None = None) -> list[dict]:
             fee = plan.get("fee_usd")
             scale = (float(fee) / usable) if usable and fee else 1.0
             offer = live_promo(plan, m["id"], day)
-            hourly = 1.0 if "input" in m else blend_of(row)
-            factor = float(m.get("billed_factor") or m.get("factor", 1.0))
-            factor *= (offer or 1.0) * hourly * scale
-            out.append({"provider": provider, "model": m["id"], "caps at": bound,
-                        "list": {k: float(rates[k]) for k in
-                                 ("input", "cache", "output", "cache_write")
-                                 if rates.get(k) is not None},
-                        **{k: float(rates[k]) * factor for k in ("input", "cache", "output")
-                           if rates.get(k) is not None},
-                        **({"cache_write": float(rates["cache_write"]) * factor}
-                           if rates.get("cache_write") is not None else {})})
+            base = float(m.get("billed_factor") or m.get("factor", 1.0)) * (offer or 1.0) * scale
+            # A model with a peak bracket gets two points, off-peak and peak, so the range
+            # is visible instead of averaged into a number that is neither.
+            hours, mult = row.get("peak_hours_per_day"), row.get("peak_multiplier")
+            shapes = [("", 1.0)]
+            if hours and mult and "input" not in m:
+                shapes = [(" (off-peak)", 1.0), (" (peak)", float(mult))]
+            for suffix, hourly in shapes:
+                factor = base * hourly
+                out.append({"provider": provider, "model": m["id"] + suffix, "base": m["id"],
+                            "caps at": bound,
+                            "list": {k: float(rates[k]) for k in
+                                     ("input", "cache", "output", "cache_write")
+                                     if rates.get(k) is not None},
+                            **{k: float(rates[k]) * factor for k in ("input", "cache", "output")
+                               if rates.get(k) is not None},
+                            **({"cache_write": float(rates["cache_write"]) * factor}
+                               if rates.get("cache_write") is not None else {})})
     return out
 
 
@@ -291,22 +285,22 @@ def cmd_plan(args) -> int:
     rows = plan_rows(store, day, args.model)
     if args.model:
         rows = [r for r in rows if r["model"] == args.model or
-                norm(r["model"].split("/")[-1]) == norm(args.model)]
+                norm((r.get("base") or r["model"]).split("/")[-1]) == norm(args.model)]
         if not rows:
             print(f"no plan serves {args.model}; try an id from data/plans.json")
             return 1
     else:
         floor = GATES["static"]["tbench_min"]
-        rows = [r for r in rows if (board_score(boards, r["model"]) or 0) >= floor]
+        rows = [r for r in rows if (board_score(boards, r.get("base") or r["model"]) or 0) >= floor]
 
     print(f"dollars per million tokens, on {day.isoformat()}")
     print("  the multiplier, the ceiling and the hour are already in these numbers\n")
-    print(f"  {'model':34s} {'tb':>4s} {'plan':14s} {'input':>10s} {'cache read':>11s} "
+    print(f"  {'model':40s} {'tb':>4s} {'plan':14s} {'input':>10s} {'cache read':>11s} "
           f"{'output':>10s} {'blended':>10s}")
     for r in sorted(rows, key=lambda x: (x["input"], x["provider"])):
-        tb = board_score(boards, r["model"])
+        tb = board_score(boards, r.get("base") or r["model"])
         blended = 0.025 * r["input"] + 0.97 * r["cache"] + 0.005 * r["output"]
-        print(f"  {r['model'][:34]:34s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:14s} "
+        print(f"  {r['model'][:40]:40s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:14s} "
               f"{r['input']:>10.5f} {r['cache']:>11.5f} {r['output']:>10.5f} "
               f"{blended:>10.5f}")
     return 0
@@ -401,7 +395,7 @@ def chart_rows(store: dict, boards: dict, day: date, mix=None) -> list[dict]:
     out = []
     measured = load_measured()
     for r in plan_rows(store, day):
-        tb = board_score(boards, r["model"])
+        tb = board_score(boards, r.get("base") or r["model"])
         if tb is None:
             continue
         if mix:
