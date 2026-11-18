@@ -50,30 +50,10 @@ GATEWAYS = {
     "opengateway": ("https://apis.opengateway.ai/v1", "OPENGATEWAY_API_KEY"),
 }
 
-# What "a million tokens" is made of, in tokens. `blended` is the convention Real API
-# Pricing publishes, so the two can be read side by side; `yours` is the shape the
-# recorded calls actually had. Anything else is `--mix`.
-def measured_mix() -> tuple[int, int, int] | None:
-    try:
-        rows = usage()["rows"]
-        fresh = sum(r["inputTokens"] - r["cacheReadTokens"] for r in rows)
-        cache = sum(r["cacheReadTokens"] for r in rows)
-        out = sum(r["outputTokens"] for r in rows)
-        total = fresh + cache + out
-        return (round(fresh / total * 1e6), round(cache / total * 1e6), round(out / total * 1e6))
-    except (OSError, KeyError, TypeError, ValueError, ZeroDivisionError):
-        return None
-
-
-def metrics() -> dict:
-    out = {
-        "blended": ((25_000, 970_000, 5_000),
-                    "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out"),
-    }
-    yours = measured_mix()
-    if yours:
-        out["yours"] = (yours, "dollars per million tokens at the shape your calls measured")
-    return out
+# A million tokens at the shape Real API Pricing publishes, and the shape a coding agent
+# mostly moves: 97% cache, 2.5% fresh input, 0.5% output. `--mix` prices another shape.
+BLENDED = (25_000, 970_000, 5_000)
+BLENDED_SUBJECT = "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out"
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -322,13 +302,12 @@ def cmd_plan(args) -> int:
     print(f"dollars per million tokens, on {day.isoformat()}")
     print("  the multiplier, the ceiling and the hour are already in these numbers\n")
     print(f"  {'model':34s} {'tb':>4s} {'plan':14s} {'input':>10s} {'cache read':>11s} "
-          f"{'cache write':>12s} {'output':>10s} {'blended':>10s}")
+          f"{'output':>10s} {'blended':>10s}")
     for r in sorted(rows, key=lambda x: (x["input"], x["provider"])):
         tb = board_score(boards, r["model"])
-        write = f"{r['cache_write']:>12.5f}" if "cache_write" in r else f"{'-':>12s}"
         blended = 0.025 * r["input"] + 0.97 * r["cache"] + 0.005 * r["output"]
         print(f"  {r['model'][:34]:34s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:14s} "
-              f"{r['input']:>10.5f} {r['cache']:>11.5f} {write} {r['output']:>10.5f} "
+              f"{r['input']:>10.5f} {r['cache']:>11.5f} {r['output']:>10.5f} "
               f"{blended:>10.5f}")
     return 0
 
@@ -459,8 +438,8 @@ def pareto(rows: list[dict]) -> list[dict]:
 PAGE_FILE = BENCH / "page.html"
 
 
-def write_page(rows: list[dict], store: dict, floor: float, subject: str, unit: str,
-               metric: str, path: Path) -> None:
+def write_page(rows: list[dict], store: dict, floor: float, subject: str,
+               path: Path) -> None:
     """Fill the template and write it: the page the site serves."""
     payload = []
     for r in rows:
@@ -484,11 +463,6 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str, unit: 
                             "label": p.get("label") or name}
                      for name, p in store["providers"].items()}))
                 .replace("__SUBJECT__", json.dumps(subject))
-                .replace("__UNIT__", json.dumps(unit))
-                .replace("__METRICS__", json.dumps(
-                    {name: {"mix": shape, "subject": text}
-                     for name, (shape, text) in metrics().items()}))
-                .replace("__DEFAULT_METRIC__", json.dumps(metric))
                 .replace("__GENERATED__", date.today().isoformat()))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html, encoding="utf-8")
@@ -621,12 +595,10 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
 
 
 def cmd_chart(args) -> int:
-    """Draw the two axes that decide it: what a token costs, and what the board says."""
+    """Draw the two axes that decide it: what a million tokens costs, and what the board says."""
     store, boards = plans(), tbench()
-    shapes = metrics()
-    mix = None
-    subject = shapes["blended"][1]
-    unit = "per 1M tokens"
+    mix = BLENDED
+    subject = BLENDED_SUBJECT
     if args.mix:
         parts = args.mix.replace(" ", "").split(",")
         try:
@@ -636,9 +608,6 @@ def cmd_chart(args) -> int:
         if len(mix) != 3 or min(mix) < 0:
             raise SystemExit("--mix wants three token counts, fresh,cache,out")
         subject = f"dollars per turn of {mix[0]:,} fresh + {mix[1]:,} cache + {mix[2]:,} out"
-        unit = "per turn"
-    else:
-        mix, subject = shapes[args.by]
     rows = chart_rows(store, boards, args.today or date.today(), mix)
     if not rows:
         print("nothing to draw")
@@ -647,7 +616,7 @@ def cmd_chart(args) -> int:
     floor = GATES["static"]["tbench_min"]
 
     if args.html:
-        write_page(rows, store, floor, subject, unit, args.by, Path(args.html))
+        write_page(rows, store, floor, subject, Path(args.html))
         return 0
     draw_png(rows, front, store, floor, subject, Path(args.out))
     return 0
@@ -1188,8 +1157,6 @@ def main() -> int:
     ch.add_argument("--out", default="frontier.png", help="where to write the png")
     ch.add_argument("--html", help="write an interactive page instead of the png")
     ch.add_argument("--mix", help="fresh,cache,out - price a turn of that shape")
-    ch.add_argument("--by", default="blended", choices=sorted(metrics()),
-                    help="what the x axis prices: a mixed million tokens")
     ch.add_argument("--today", type=date.fromisoformat,
                     help="a date (YYYY-MM-DD), for the promos of that day")
     ch.set_defaults(fn=cmd_chart)

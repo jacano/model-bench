@@ -120,7 +120,6 @@
   </header>
 
   <div class="bar">
-    <div class="seg" id="metric"></div>
     <div class="seg" id="scale">
       <button data-v="log" aria-pressed="true">Log</button>
       <button data-v="linear">Linear</button>
@@ -158,21 +157,13 @@ const ROWS = [{"model": "muse-ember", "provider": "command-code", "plan": "GOAT"
 const COLOURS = {"open-design": "#60a5fa", "opengateway": "#a78bfa", "command-code": "#fb923c", "opencode": "#f472b6"};
 const PLANS = {"command-code": {"plan": "GOAT", "fee": 10.0, "label": "Command Code GOAT"}, "open-design": {"plan": "Go", "fee": 10.0, "label": "OpenDesign Go"}, "opengateway": {"plan": "metered", "fee": null, "label": "OpenGateway (metered)"}, "opencode": {"plan": "Go", "fee": 10.0, "label": "OpenCode Go"}};
 const FLOOR = 38.0;
-const UNIT = "per 1M tokens";
-const METRICS = {"blended": {"mix": [25000, 970000, 5000], "subject": "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out"}, "yours": {"mix": [4670, 991828, 3502], "subject": "dollars per million tokens at the shape your calls measured"}};
-const DEFAULT_METRIC = "blended";
-let metric = DEFAULT_METRIC;
 const state = { scale:"log", dir:"asc", front:true, floor:true, labels:true, hidden:new Set() };
 const W = 1400, H = 730, M = { l: 74, r: 28, t: 22, b: 58 };
 const svg = document.getElementById("chart");
 const tip = document.getElementById("tip");
 
-const costOf = r => {
-  const m = METRICS[metric];
-  if (!m.mix) return r.eff.input;
-  const [f, c, o] = m.mix;
-  return (f * r.eff.input + c * r.eff.cache + o * r.eff.output) / 1e6;
-};
+const BLEND = [25000, 970000, 5000];
+const costOf = r => (BLEND[0] * r.eff.input + BLEND[1] * r.eff.cache + BLEND[2] * r.eff.output) / 1e6;
 const cost  = r => costOf(r);
 const money = v => v >= 0.01 ? "$" + v.toFixed(3) : "$" + v.toFixed(5);
 const rate  = v => v == null ? "—" : money(v);
@@ -280,15 +271,14 @@ function render() {
 
 function showTip(r, e) {
   const colour = COLOURS[r.provider] || "#94a3b8";
-  const rows = [["Terminal-Bench", r.tb.toFixed(1)]];
-  if (metric !== "input") rows.push(["cost", money(costOf(r))]);
-  rows.push(
+  const rows = [
+    ["Terminal-Bench", r.tb.toFixed(1)],
+    ["blended", money(costOf(r))],
     ["list input", rate(r.list && r.list.input)],
     ["input",  rate(r.eff.input)],
     ["cache read",  rate(r.eff.cache)],
-    ["cache write", rate(r.eff.cache_write)],
     ["output", rate(r.eff.output)]
-  );
+  ];
   const state_word = r.state === "admitted" ? "admitted" :
                      (r.state === "unmeasured" ? "unmeasured" : "measured, fails");
   tip.innerHTML =
@@ -311,19 +301,11 @@ function moveTip(e) {
   tip.style.top = y + "px";
 }
 
-document.getElementById("metric").innerHTML = Object.keys(METRICS).map(k =>
-  `<button data-v="${k}" aria-pressed="${k === metric ? "true" : "false"}">${k[0].toUpperCase() + k.slice(1)}</button>`
-).join("");
-
 document.querySelectorAll(".seg button").forEach(btn => {
   btn.addEventListener("click", () => {
     const group = btn.parentElement.id;
     if (group === "extra") state[btn.dataset.v] = !state[btn.dataset.v];
     else state[group] = btn.dataset.v;
-    if (group === "metric") {
-      metric = btn.dataset.v;
-      document.getElementById("subject").textContent = METRICS[metric].subject;
-    }
     btn.parentElement.querySelectorAll("button").forEach(b =>
       b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
     render();
@@ -344,9 +326,7 @@ document.querySelectorAll(".chip").forEach(chip => {
   });
 });
 
-document.querySelectorAll("#metric button").forEach(b =>
-  b.setAttribute("aria-pressed", b.dataset.v === metric ? "true" : "false"));
-document.getElementById("subject").textContent = METRICS[metric].subject;
+document.getElementById("subject").textContent = "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out";
 document.getElementById("stamp").textContent = "generated 2026-11-18";
 render();
 </script>
