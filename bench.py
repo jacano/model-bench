@@ -627,6 +627,7 @@ ANSWER_TOKENS = 1500
 BASE = ""
 KEY_ENV = ""
 KEY = ""
+API = "completions"
 
 
 def load_measured() -> dict:
@@ -820,6 +821,16 @@ def call(model: str, prompt: str, max_tokens: int, tools: list | None = None,
                                                "properties": {t["param"]: {"type": "string"}},
                                                "required": [t["param"]]}} for t in tools]
         url, headers = f"{BASE}/messages", {"x-api-key": KEY, "anthropic-version": "2023-06-01"}
+    elif API == "responses":
+        body = {"model": model, "input": prompt, "max_output_tokens": max_tokens}
+        if tools:
+            body["tools"] = [{"type": "function", "name": t["name"],
+                              "description": t["description"],
+                              "parameters": {"type": "object",
+                                             "properties": {t["param"]: {"type": "string"}},
+                                             "required": [t["param"]]}} for t in tools]
+            body["tool_choice"] = "auto"
+        url, headers = f"{BASE}/responses", {"Authorization": f"Bearer {KEY}"}
     else:
         body = {"model": model, "max_tokens": max_tokens,
                 "messages": [{"role": "user", "content": prompt}]}
@@ -842,6 +853,8 @@ def usage_tokens(data: dict) -> tuple[int, int]:
     u = data.get("usage", {})
     out = u.get("completion_tokens") or u.get("output_tokens") or 0
     cached = (u.get("prompt_tokens_details") or {}).get("cached_tokens")
+    if cached is None:
+        cached = (u.get("input_tokens_details") or {}).get("cached_tokens")
     if cached is None:
         cached = u.get("cache_read_input_tokens", 0)
     return out, cached
@@ -915,6 +928,16 @@ def measure_route(model: str) -> dict:
             if model.startswith("claude-"):
                 calls = [(b.get("name"), b.get("input")) for b in data.get("content", [])
                          if b.get("type") == "tool_use"]
+            elif API == "responses":
+                calls = []
+                for item in data.get("output", []):
+                    if item.get("type") != "function_call":
+                        continue
+                    try:
+                        args = json.loads(item.get("arguments") or "{}")
+                    except json.JSONDecodeError:
+                        args = None
+                    calls.append((item.get("name"), args))
             else:
                 calls = []
                 for c in data["choices"][0]["message"].get("tool_calls") or []:
@@ -976,9 +999,10 @@ def live(model: str, tbench_score: float) -> int:
 
 
 def cmd_measure(args) -> int:
-    global GATES, ADMITTED, BASE, KEY_ENV
+    global GATES, ADMITTED, BASE, KEY_ENV, API
     GATES, ADMITTED = load_policy()
     BASE, KEY_ENV = GATEWAYS[args.provider]
+    API = args.api
     if not args.model:
         return check()
     if args.tbench is None:
@@ -1122,6 +1146,8 @@ def main() -> int:
     m.add_argument("--tbench", type=float, help="that model's board score, for the floor")
     m.add_argument("--provider", default="opendesign", choices=sorted(GATEWAYS),
                    help="which plan serves it")
+    m.add_argument("--api", default="completions", choices=("completions", "responses"),
+                   help="the OpenAI shape the route speaks; open-design serves responses")
     m.set_defaults(fn=cmd_measure)
 
     a = sub.add_parser("agentic", help="a real task, judged by pytest")

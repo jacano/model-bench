@@ -24,7 +24,9 @@ python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 The chart's axis is a million input tokens, so two providers compare without a workload
 assumption; `--mix fresh,cache,out` prices a turn of a shape you name. `verify` is the other
 kind of evidence: it recomputes fifty calls the console recorded, from their unit prices, and
-checks that the block's price is the price that was billed.
+checks that the block's price is the price that was billed. `measure --api responses` sends a
+route down the Responses shape, which is the one OpenDesign serves, instead of chat
+completions.
 
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.
