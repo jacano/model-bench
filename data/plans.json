@@ -800,7 +800,8 @@
    "sources": {
     "pricing": "https://commandcode.ai/pricing",
     "credits": "https://commandcode.ai/docs/plans/goat"
-   }
+   },
+   "label": "Command Code GOAT"
   },
   "open-design": {
    "plan": "Go",
@@ -945,7 +946,8 @@
    "sources": {
     "pricing": "https://open-design.ai/pricing/",
     "credits": "https://open-design.ai/model-credits/"
-   }
+   },
+   "label": "OpenDesign Go"
   },
   "opengateway": {
    "plan": "metered",
@@ -967,7 +969,8 @@
      "note": "the -90% is not one multiplier: on the 4,61 dollar invoice the input came out at 0,0067 per million (published 0,030), cache at 0,0006 and output at 0,120, so the rates are stored as billed and the factor is 1. Context over 256K is billed at 2x and the discount may end by notice.",
      "cache_write": 0.0067
     }
-   ]
+   ],
+   "label": "OpenGateway (metered)"
   },
   "opencode": {
    "plan": "Go",
@@ -1186,7 +1189,8 @@
    "sources": {
     "pricing": "https://opencode.ai/console/go",
     "credits": "https://opencode.ai/docs/console/go/"
-   }
+   },
+   "label": "OpenCode Go"
   }
  }
 }

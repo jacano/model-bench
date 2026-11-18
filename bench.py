@@ -298,7 +298,7 @@ def cmd_plan(args) -> int:
 # --------------------------------------------------------------------------- chart
 
 CHART_COLOURS = {"open-design": (96, 165, 250), "opengateway": (167, 139, 250),
-                 "command-code": (251, 146, 60), "opencode": (45, 212, 191)}
+                 "command-code": (251, 146, 60), "opencode": (244, 114, 182)}
 
 
 def chart_rows(store: dict, boards: dict, day: date, mix=None) -> list[dict]:
@@ -363,7 +363,8 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str,
                                                     for k, v in CHART_COLOURS.items()}))
                 .replace("__FLOOR__", f"{floor:.1f}")
                 .replace("__PLANS__", json.dumps(
-                    {name: {"plan": p["plan"], "fee": p.get("fee_usd")}
+                    {name: {"plan": p["plan"], "fee": p.get("fee_usd"),
+                            "label": p.get("label") or name}
                      for name, p in store["providers"].items()}))
                 .replace("__SUBJECT__", json.dumps(subject))
                 .replace("__GENERATED__", date.today().isoformat()))
@@ -475,7 +476,8 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
     entries = []
     for name, plan in store["providers"].items():
         fee = plan.get("fee_usd")
-        label = f"{name}  {plan['plan']}  ${fee:.0f}/mo" if fee else f"{name}  pay as you go"
+        label = (f"{plan.get('label') or name}  ${fee:.0f}/mo" if fee
+                 else f"{plan.get('label') or name}  pay as you go")
         entries.append((label, CHART_COLOURS.get(name, (200, 200, 200))))
     lx = M
     for text, colour in entries:

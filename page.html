@@ -280,7 +280,7 @@ function showTip(r, e) {
                      (r.state === "unmeasured" ? "unmeasured" : "measured, fails");
   tip.innerHTML =
     `<div class="top"><i style="background:${colour}"></i><h3>${r.model.split("/").pop()}</h3></div>` +
-    `<div class="who">${PLANS[r.provider].plan} · ` +
+    `<div class="who">${PLANS[r.provider].label} · ` +
     `${r.fee ? "$" + r.fee + "/mo" : "pay as you go"}</div>` +
     `<table>` + rows.map(kv => `<tr><td>${kv[0]}</td><td>${kv[1]}</td></tr>`).join("") +
     `<tr class="sep"><td>state</td><td class="state ${state_word === "admitted" ? "" : "no"}">` +
@@ -311,7 +311,7 @@ document.querySelectorAll(".seg button").forEach(btn => {
 
 document.getElementById("legend").innerHTML = Object.keys(PLANS).map(k => {
   const p = PLANS[k];
-  const who = p.fee ? `${k} · ${p.plan} · $${p.fee}/mo` : `${k} · pay as you go`;
+  const who = p.fee ? `${p.label} · $${p.fee}/mo` : p.label;
   return `<span class="chip" data-p="${k}"><i style="background:${COLOURS[k]}"></i>${who}</span>`;
 }).join("");
 document.querySelectorAll(".chip").forEach(chip => {
