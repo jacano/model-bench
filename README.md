@@ -16,16 +16,15 @@ capability, and the frontier through whatever nothing beats. The picture it publ
 ```bash
 python bench.py plan      # what a million tokens costs, per model, per plan
 python bench.py chart     # price against the board, and the frontier through it
-python bench.py chart --workload   # the same, priced per real turn
+python bench.py verify    # the console's recorded calls against the plan's price
 python bench.py measure   # the stored rows against the gates, and the menu
 python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 ```
 
 The chart's axis is a million input tokens, so two providers compare without a workload
-assumption. `--workload` prices a **turn** instead — the tokens one call moves — at the
-shape in `data/workload.json`, measured from the console's usage records, and `--mix
-fresh,cache,out` prices another shape. A turn is what a fee actually buys, but its shape
-belongs to the sessions, not to the provider.
+assumption; `--mix fresh,cache,out` prices a turn of a shape you name. `verify` is the other
+kind of evidence: it recomputes fifty calls the console recorded, from their unit prices, and
+checks that the block's price is the price that was billed.
 
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.
@@ -45,7 +44,7 @@ git clone https://github.com/jacano/dsh-config ../dsh-config
 | --- | --- |
 | `data/plans.json` | the plans, their windows, and the catalogue they price from |
 | `data/tbench.json` | the board: what each model does on Terminal-Bench, and with which agent |
-| `data/workload.json` | the shape of one turn: fresh, cache and output tokens a call moves |
+| `data/usage.json` | calls the console recorded, anonymised: what `verify` recomputes |
 | `models.csv` | what each route measured on the wire |
 | `models-policy.yml` | the gates, and which ids are admitted |
 | `decisions.md` | what was decided, dated |
@@ -69,10 +68,10 @@ point with no gate behind it.
 
 Prices from the provider's own card and credits pages, named under `sources` in
 `data/plans.json`: the card gives the fee, the credits page gives how far it goes. Capability
-from Terminal-Bench, executed and graded. The turn's shape from the console's usage records,
-named in `data/workload.json`: fifty calls of one model, averaged. Behaviour measured by
-`measure` against the live route, in `models.csv`. The provider never grades itself, and only
-`measure` and `agentic` touch the network.
+from Terminal-Bench, executed and graded. Behaviour measured by `measure` against the live
+route, in `models.csv`. The price is checked against what was billed, in `data/usage.json`:
+`verify` recomputes every recorded call from its unit prices. The provider never grades
+itself, and only `measure` and `agentic` touch the network.
 
 ## License
 

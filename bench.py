@@ -33,7 +33,7 @@ BENCH = Path(__file__).resolve().parent
 DATA = BENCH / "data"
 PLANS_FILE = DATA / "plans.json"
 TBENCH_FILE = DATA / "tbench.json"
-WORKLOAD_FILE = DATA / "workload.json"
+USAGE_FILE = DATA / "usage.json"
 POLICY = BENCH / "models-policy.yml"
 MEASURED = BENCH / "models.csv"
 # The menu is configuration, so it lives in jacano/dsh-config, beside a clone of this
@@ -124,23 +124,9 @@ def tbench() -> dict:
     return read_json(TBENCH_FILE)["models"]
 
 
-def workload_mix() -> tuple[int, int, int] | None:
-    """The shape of one real turn, as the usage records measured it.
-
-    It is the default the chart prices, because a subscription is spent on turns, not on
-    a million input tokens. `--input` plots the old axis; `--mix` overrides this file.
-    """
-    try:
-        tokens = read_json(WORKLOAD_FILE)["tokens"]
-        return int(tokens["fresh"]), int(tokens["cache"]), int(tokens["out"])
-    except (OSError, KeyError, TypeError, ValueError):
-        return None
-
-
-def turn_cost(row: dict, mix: tuple[int, int, int]) -> float:
-    """Dollars for one turn of that shape, at this row's rates."""
-    fresh, cache, out = mix
-    return (fresh * row["input"] + cache * row["cache"] + out * row["output"]) / 1e6
+def usage() -> dict:
+    """The calls the console recorded: the check that the price is the billed one."""
+    return read_json(USAGE_FILE)
 
 
 def load_policy() -> tuple[dict, set]:
@@ -312,6 +298,71 @@ def cmd_plan(args) -> int:
         write = f"{r['cache_write']:>12.5f}" if "cache_write" in r else f"{'-':>12s}"
         print(f"  {r['model'][:34]:34s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:14s} "
               f"{r['input']:>10.5f} {r['cache']:>11.5f} {write} {r['output']:>10.5f}")
+    return 0
+
+
+# --------------------------------------------------------------------------- verify
+
+
+def cmd_verify(args) -> int:
+    """The console's recorded calls against the plan's prices: is our cost the billed one?"""
+    store = plans()
+    doc = usage()
+    provider = store["providers"]["open-design"]
+    block = {m["id"]: m for m in provider["models"]}
+    fee, ceiling = provider.get("fee_usd"), provider.get("credits_usd")
+    scale = fee / ceiling if fee and ceiling else 1.0
+
+    problems: list[str] = []
+    worst_list = worst_contrib = 0.0
+    ours = theirs = 0.0
+    for rec in doc["rows"]:
+        model = rec["model"]
+        entry = block.get(model)
+        if not entry:
+            problems.append(f"{model}: no row in the open-design block")
+            continue
+        unit = rec["unitPrices"]
+        for key, field in (("input", "input"), ("cacheRead", "cache"),
+                           ("output", "output"), ("cacheWrite", "cache_write")):
+            if field in entry and unit.get(key) is not None and abs(float(unit[key]) - float(entry[field])) > 1e-9:
+                problems.append(f"{model}: {key} unit price {unit[key]} != block {entry[field]}")
+        fresh = rec["inputTokens"] - rec["cacheReadTokens"]
+        listed = (fresh * unit["input"] + rec["cacheReadTokens"] * unit["cacheRead"]
+                  + rec["outputTokens"] * unit["output"]) / 1e6
+        worst_list = max(worst_list, abs(round(listed, 4) - rec["listChargedUsd"]))
+        contribution = listed * rec["multiplier"]
+        worst_contrib = max(worst_contrib, abs(round(contribution, 4) - rec["contributionUsd"]))
+        factor = float(entry.get("billed_factor") or entry.get("factor", 1.0))
+        if abs(factor - rec["multiplier"]) > 1e-9:
+            problems.append(f"{model}: multiplier {rec['multiplier']} != block {factor}")
+        if rec["chargeCredits"] != 0:
+            problems.append(f"{model}: charged {rec['chargeCredits']} credits to the wallet")
+        # Our price: the list rate through the block's own multiplier and fee / ceiling.
+        ours += (fresh * entry["input"] + rec["cacheReadTokens"] * entry["cache"]
+                 + rec["outputTokens"] * entry["output"]) / 1e6 * factor * scale
+        theirs += rec["contributionUsd"] * scale
+
+    gap = ours - theirs
+    rounded = len(doc["rows"]) * 0.00005 * scale
+    print(f"usage: {len(doc['rows'])} calls of {doc['model']} on {doc['date']}")
+    print(f"  list:         recomputed from the unit prices, worst {worst_list:.4f} (their rounding)")
+    print(f"  multiplier:   {doc['rows'][0]['multiplier']}, the block's factor")
+    print(f"  contribution: list x multiplier, worst {worst_contrib:.4f}")
+    print(f"  our cost:     {ours:.6f} for the {len(doc['rows'])} calls")
+    print(f"  the plan:     {theirs:.6f} at fee / ceiling ({fee:.0f} / {ceiling:.0f})")
+    print(f"  gap:          {gap:+.6f}; they round every contribution to 4 decimals, a band of {rounded:.6f}")
+
+    if worst_list > 0.0002:
+        problems.append(f"the list charge is off by {worst_list:.4f} a row")
+    if abs(gap) > rounded * 1.1 + 1e-9:
+        problems.append(f"the cost is off by {gap:.6f}, outside the {rounded:.6f} their rounding allows")
+    if problems:
+        print("\nFAIL:")
+        for problem in problems:
+            print(f"  - {problem}")
+        return 1
+    print("\nOK: the block's price is the price the console billed")
     return 0
 
 
@@ -532,10 +583,6 @@ def cmd_chart(args) -> int:
             raise SystemExit("--mix wants fresh,cache,out as three integers")
         if len(mix) != 3 or min(mix) < 0:
             raise SystemExit("--mix wants three token counts, fresh,cache,out")
-    elif args.workload:
-        mix = workload_mix()
-        if not mix:
-            raise SystemExit(f"no workload shape in {WORKLOAD_FILE}")
     rows = chart_rows(store, boards, args.today or date.today(), mix)
     if not rows:
         print("nothing to draw")
@@ -1058,12 +1105,13 @@ def main() -> int:
     pl.add_argument("--model", help="one model; without it, everything the board ranks")
     pl.set_defaults(fn=cmd_plan)
 
+    v = sub.add_parser("verify", help="the usage records against the plan's prices")
+    v.set_defaults(fn=cmd_verify)
+
     ch = sub.add_parser("chart", help="the Pareto picture: price against the board")
     ch.add_argument("--out", default="frontier.png", help="where to write the png")
     ch.add_argument("--html", help="write an interactive page instead of the png")
     ch.add_argument("--mix", help="fresh,cache,out - price a turn of that shape")
-    ch.add_argument("--workload", action="store_true",
-                    help="price the turn measured in data/workload.json")
     ch.add_argument("--today", type=date.fromisoformat,
                     help="a date (YYYY-MM-DD), for the promos of that day")
     ch.set_defaults(fn=cmd_chart)
