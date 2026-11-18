@@ -130,7 +130,7 @@
     </div>
     <div class="seg" id="extra">
       <button data-v="front" aria-pressed="true">Frontier</button>
-      <button data-v="floor" aria-pressed="true">Floor</button>
+      <button data-v="floor" aria-pressed="false">Floor</button>
       <button data-v="labels" aria-pressed="true">Labels</button>
     </div>
     <span class="count" id="count"></span>
@@ -157,7 +157,7 @@ const ROWS = [{"model": "muse-ember", "provider": "command-code", "plan": "GOAT"
 const COLOURS = {"open-design": "#60a5fa", "opengateway": "#a78bfa", "command-code": "#fb923c", "opencode": "#f472b6"};
 const PLANS = {"command-code": {"plan": "GOAT", "fee": 10.0, "label": "Command Code GOAT"}, "open-design": {"plan": "Go", "fee": 10.0, "label": "OpenDesign Go"}, "opengateway": {"plan": "metered", "fee": null, "label": "OpenGateway (metered)"}, "opencode": {"plan": "Go", "fee": 10.0, "label": "OpenCode Go"}};
 const FLOOR = 38.0;
-const state = { scale:"log", dir:"asc", front:true, floor:true, labels:true, hidden:new Set() };
+const state = { scale:"log", dir:"asc", front:true, floor:false, labels:true, hidden:new Set() };
 const W = 1400, H = 730, M = { l: 74, r: 28, t: 22, b: 58 };
 const svg = document.getElementById("chart");
 const tip = document.getElementById("tip");

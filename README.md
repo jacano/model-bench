@@ -26,10 +26,12 @@ The chart's axis is a million tokens at the blended shape: 97% cache, 2.5% fresh
 the convention Real API Pricing publishes, so the two can be read side by side. `--mix
 fresh,cache,out` prices another shape. A model that prices peak hours separately (the
 DeepSeek family on Command Code) gets two points, off-peak and peak, instead of an average
-that is neither. `verify` is the other kind of evidence: it recomputes fifty calls the
-console recorded, from their unit prices, and checks that the block's price is the price
-that was billed. `measure --api responses` sends a route down the Responses shape, which is
-the one OpenDesign serves, instead of chat completions.
+that is neither. The Terminal-Bench floor line is off by default — the page has its toggle
+and `chart --floor` draws it — but the gate still keeps sub-floor models off the frontier.
+`verify` is the other kind of evidence: it recomputes fifty calls the console recorded, from
+their unit prices, and checks that the block's price is the price that was billed. `measure
+--api responses` sends a route down the Responses shape, which is the one OpenDesign serves,
+instead of chat completions.
 
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.

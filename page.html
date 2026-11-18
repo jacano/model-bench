@@ -130,7 +130,7 @@
     </div>
     <div class="seg" id="extra">
       <button data-v="front" aria-pressed="true">Frontier</button>
-      <button data-v="floor" aria-pressed="true">Floor</button>
+      <button data-v="floor" aria-pressed="false">Floor</button>
       <button data-v="labels" aria-pressed="true">Labels</button>
     </div>
     <span class="count" id="count"></span>
@@ -157,7 +157,7 @@ const ROWS = __DATA__;
 const COLOURS = __COLOURS__;
 const PLANS = __PLANS__;
 const FLOOR = __FLOOR__;
-const state = { scale:"log", dir:"asc", front:true, floor:true, labels:true, hidden:new Set() };
+const state = { scale:"log", dir:"asc", front:true, floor:false, labels:true, hidden:new Set() };
 const W = 1400, H = 730, M = { l: 74, r: 28, t: 22, b: 58 };
 const svg = document.getElementById("chart");
 const tip = document.getElementById("tip");

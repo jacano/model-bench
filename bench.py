@@ -464,7 +464,7 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str,
 
 
 def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
-             subject: str, path: Path) -> None:
+             subject: str, path: Path, show_floor: bool = False) -> None:
     """The same table as a picture, with Pillow and no other dependency."""
     import math
 
@@ -524,11 +524,12 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
                 dr.text((x, H - M + 14), shown, font=f_tick, fill=dim, anchor="mt")
         decade *= 10
 
-    y_floor = py(floor)
-    for x in range(M, W - M, 16):
-        dr.line([(x, y_floor), (min(x + 9, W - M), y_floor)], fill=(248, 113, 113), width=2)
-    dr.text((W - M - 8, y_floor - 10), f"Terminal-Bench floor {floor:.1f}", font=f_tick,
-            fill=(248, 113, 113), anchor="rb")
+    if show_floor:
+        y_floor = py(floor)
+        for x in range(M, W - M, 16):
+            dr.line([(x, y_floor), (min(x + 9, W - M), y_floor)], fill=(248, 113, 113), width=2)
+        dr.text((W - M - 8, y_floor - 10), f"Terminal-Bench floor {floor:.1f}", font=f_tick,
+                fill=(248, 113, 113), anchor="rb")
 
     if len(front) > 1:
         pts = [(px(r["cost"]), py(r["tb"])) for r in front]
@@ -612,7 +613,7 @@ def cmd_chart(args) -> int:
     if args.html:
         write_page(rows, store, floor, subject, Path(args.html))
         return 0
-    draw_png(rows, front, store, floor, subject, Path(args.out))
+    draw_png(rows, front, store, floor, subject, Path(args.out), args.floor)
     return 0
 
 
@@ -1151,6 +1152,8 @@ def main() -> int:
     ch.add_argument("--out", default="frontier.png", help="where to write the png")
     ch.add_argument("--html", help="write an interactive page instead of the png")
     ch.add_argument("--mix", help="fresh,cache,out - price a turn of that shape")
+    ch.add_argument("--floor", action="store_true",
+                    help="draw the Terminal-Bench floor line")
     ch.add_argument("--today", type=date.fromisoformat,
                     help="a date (YYYY-MM-DD), for the promos of that day")
     ch.set_defaults(fn=cmd_chart)
