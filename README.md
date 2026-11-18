@@ -14,11 +14,17 @@ capability, and the frontier through whatever nothing beats. The picture it publ
 ## Run
 
 ```bash
-python bench.py plan      # what a million tokens costs, per model, per plan
-python bench.py chart     # that table as a picture, and the frontier through it
+python bench.py plan      # what a million tokens costs, and what one real turn costs
+python bench.py chart     # price against the board, and the frontier through it
+python bench.py chart --input   # price a million input tokens instead
 python bench.py measure   # the stored rows against the gates, and the menu
 python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 ```
+
+The chart prices a **turn** — the tokens one call moves — at the shape in
+`data/workload.json`, measured from the console's usage records, because a subscription is
+spent on turns and not on a million input tokens. `--mix fresh,cache,out` prices another
+shape; `--input` keeps the old axis, which compares models on the same footing.
 
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.
@@ -38,6 +44,7 @@ git clone https://github.com/jacano/dsh-config ../dsh-config
 | --- | --- |
 | `data/plans.json` | the plans, their windows, and the catalogue they price from |
 | `data/tbench.json` | the board: what each model does on Terminal-Bench, and with which agent |
+| `data/workload.json` | the shape of one turn: fresh, cache and output tokens a call moves |
 | `models.csv` | what each route measured on the wire |
 | `models-policy.yml` | the gates, and which ids are admitted |
 | `decisions.md` | what was decided, dated |
@@ -61,9 +68,10 @@ point with no gate behind it.
 
 Prices from the provider's own card and credits pages, named under `sources` in
 `data/plans.json`: the card gives the fee, the credits page gives how far it goes. Capability
-from Terminal-Bench, executed and graded. Behaviour measured by `measure` against the live
-route, in `models.csv`. The provider never grades itself, and only `measure` and `agentic`
-touch the network.
+from Terminal-Bench, executed and graded. The turn's shape from the console's usage records,
+named in `data/workload.json`: fifty calls of one model, averaged. Behaviour measured by
+`measure` against the live route, in `models.csv`. The provider never grades itself, and only
+`measure` and `agentic` touch the network.
 
 ## License
 

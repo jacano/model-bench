@@ -144,7 +144,7 @@
 
   <footer>
     <span>Every model every plan in <code>data/plans.json</code> that Terminal-Bench ranks.
-      Hover a point for its rates.</span>
+      Hover a point for its real cost per turn and its rates.</span>
     <span>The chart and its controls are borrowed from
       <a href="https://linearbench.pages.dev/">linearbench</a>; the axes are not.
       <a href="https://github.com/jacano/model-bench">Source</a> ·
@@ -157,6 +157,7 @@ const ROWS = __DATA__;
 const COLOURS = __COLOURS__;
 const PLANS = __PLANS__;
 const FLOOR = __FLOOR__;
+const UNIT = __UNIT__;
 const state = { scale:"log", dir:"asc", front:true, floor:true, labels:true, hidden:new Set() };
 const W = 1400, H = 730, M = { l: 74, r: 28, t: 22, b: 58 };
 const svg = document.getElementById("chart");
@@ -271,6 +272,8 @@ function showTip(r, e) {
   const colour = COLOURS[r.provider] || "#94a3b8";
   const rows = [
     ["Terminal-Bench", r.tb.toFixed(1)],
+    [UNIT, money(r.cost)],
+    ["list input", rate(r.list && r.list.input)],
     ["input",  rate(r.eff.input)],
     ["cache read",  rate(r.eff.cache)],
     ["cache write", rate(r.eff.cache_write)],

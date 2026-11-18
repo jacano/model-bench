@@ -33,6 +33,7 @@ BENCH = Path(__file__).resolve().parent
 DATA = BENCH / "data"
 PLANS_FILE = DATA / "plans.json"
 TBENCH_FILE = DATA / "tbench.json"
+WORKLOAD_FILE = DATA / "workload.json"
 POLICY = BENCH / "models-policy.yml"
 MEASURED = BENCH / "models.csv"
 # The menu is configuration, so it lives in jacano/dsh-config, beside a clone of this
@@ -121,6 +122,25 @@ def plans() -> dict:
 def tbench() -> dict:
     """The board: model + agent, one row per model, the best run it got."""
     return read_json(TBENCH_FILE)["models"]
+
+
+def workload_mix() -> tuple[int, int, int] | None:
+    """The shape of one real turn, as the usage records measured it.
+
+    It is the default the chart prices, because a subscription is spent on turns, not on
+    a million input tokens. `--input` plots the old axis; `--mix` overrides this file.
+    """
+    try:
+        tokens = read_json(WORKLOAD_FILE)["tokens"]
+        return int(tokens["fresh"]), int(tokens["cache"]), int(tokens["out"])
+    except (OSError, KeyError, TypeError, ValueError):
+        return None
+
+
+def turn_cost(row: dict, mix: tuple[int, int, int]) -> float:
+    """Dollars for one turn of that shape, at this row's rates."""
+    fresh, cache, out = mix
+    return (fresh * row["input"] + cache * row["cache"] + out * row["output"]) / 1e6
 
 
 def load_policy() -> tuple[dict, set]:
@@ -283,15 +303,25 @@ def cmd_plan(args) -> int:
         floor = GATES["static"]["tbench_min"]
         rows = [r for r in rows if (board_score(boards, r["model"]) or 0) >= floor]
 
+    mix = workload_mix()
     print(f"dollars per million tokens, on {day.isoformat()}")
-    print("  the multiplier, the ceiling and the hour are already in these numbers\n")
-    print(f"  {'model':34s} {'tb':>4s} {'plan':14s} {'input':>10s} {'cache read':>11s} "
-          f"{'cache write':>12s} {'output':>10s}")
+    print("  the multiplier, the ceiling and the hour are already in these numbers")
+    if mix:
+        print(f"  a turn is {mix[0]:,} fresh + {mix[1]:,} cache + {mix[2]:,} out tokens")
+    print()
+    head = (f"  {'model':34s} {'tb':>4s} {'plan':12s} {'input':>10s} {'cache read':>11s} "
+            f"{'cache write':>12s} {'output':>10s}")
+    if mix:
+        head += f" {'per turn':>10s}"
+    print(head)
     for r in sorted(rows, key=lambda x: (x["input"], x["provider"])):
         tb = board_score(boards, r["model"])
         write = f"{r['cache_write']:>12.5f}" if "cache_write" in r else f"{'-':>12s}"
-        print(f"  {r['model'][:34]:34s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:14s} "
-              f"{r['input']:>10.5f} {r['cache']:>11.5f} {write} {r['output']:>10.5f}")
+        line = (f"  {r['model'][:34]:34s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:12s} "
+                f"{r['input']:>10.5f} {r['cache']:>11.5f} {write} {r['output']:>10.5f}")
+        if mix:
+            line += f" {turn_cost(r, mix):>10.6f}"
+        print(line)
     return 0
 
 
@@ -343,7 +373,7 @@ def pareto(rows: list[dict]) -> list[dict]:
 PAGE_FILE = BENCH / "page.html"
 
 
-def write_page(rows: list[dict], store: dict, floor: float, subject: str,
+def write_page(rows: list[dict], store: dict, floor: float, subject: str, unit: str,
                path: Path) -> None:
     """Fill the template and write it: the page the site serves."""
     payload = []
@@ -353,9 +383,10 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str,
             "model": r["model"], "provider": r["provider"],
             "plan": plan["plan"], "fee": plan.get("fee_usd"),
             "tb": round(r["tb"], 2), "state": r.get("state", "unmeasured"),
-            "cost": round(r["input"], 6),
+            "cost": round(r["cost"], 6),
             "eff": {k: round(v, 6) for k, v in r.items()
                     if k in ("input", "cache", "cache_write", "output")},
+            "list": {k: round(v, 6) for k, v in r["list"].items()},
         })
     template = PAGE_FILE.read_text(encoding="utf-8")
     html = (template.replace("__DATA__", json.dumps(payload))
@@ -367,6 +398,7 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str,
                             "label": p.get("label") or name}
                      for name, p in store["providers"].items()}))
                 .replace("__SUBJECT__", json.dumps(subject))
+                .replace("__UNIT__", json.dumps(unit))
                 .replace("__GENERATED__", date.today().isoformat()))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html, encoding="utf-8")
@@ -510,6 +542,10 @@ def cmd_chart(args) -> int:
             raise SystemExit("--mix wants fresh,cache,out as three integers")
         if len(mix) != 3 or min(mix) < 0:
             raise SystemExit("--mix wants three token counts, fresh,cache,out")
+        if args.input:
+            raise SystemExit("--mix and --input are two plots; pick one")
+    elif not args.input:
+        mix = workload_mix()
     rows = chart_rows(store, boards, args.today or date.today(), mix)
     if not rows:
         print("nothing to draw")
@@ -518,10 +554,11 @@ def cmd_chart(args) -> int:
     floor = GATES["static"]["tbench_min"]
 
     subject = ("dollars per million input tokens" if not mix else
-               f"dollars per request of {mix[0]:,} fresh + {mix[1]:,} cache + {mix[2]:,} out")
+               f"dollars per turn of {mix[0]:,} fresh + {mix[1]:,} cache + {mix[2]:,} out")
+    unit = "per million input tokens" if not mix else "per turn"
 
     if args.html:
-        write_page(rows, store, floor, subject, Path(args.html))
+        write_page(rows, store, floor, subject, unit, Path(args.html))
         return 0
     draw_png(rows, front, store, floor, subject, Path(args.out))
     return 0
@@ -1034,7 +1071,9 @@ def main() -> int:
     ch = sub.add_parser("chart", help="the Pareto picture: price against the board")
     ch.add_argument("--out", default="frontier.png", help="where to write the png")
     ch.add_argument("--html", help="write an interactive page instead of the png")
-    ch.add_argument("--mix", help="fresh,cache,out - price a request of that shape")
+    ch.add_argument("--mix", help="fresh,cache,out - price a turn of that shape")
+    ch.add_argument("--input", action="store_true",
+                    help="plot the million-input-token rate instead of a real turn")
     ch.add_argument("--today", type=date.fromisoformat,
                     help="a date (YYYY-MM-DD), for the promos of that day")
     ch.set_defaults(fn=cmd_chart)
