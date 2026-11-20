@@ -1,7 +1,7 @@
 {
  "source": "https://www.tbench.ai/",
  "benchmark": "Terminal-Bench 4.1",
- "fetched": "2026-11-18T09:57:37+01:00",
+ "fetched": "2026-11-20T16:33:22+01:00",
  "models": {
   "copilotfusion": {
    "label": "Copilot Fusion",
@@ -522,6 +522,16 @@
    "date": "Jul 17, 2026",
    "cost_usd": 1011.52,
    "tokens": 1389283126
+  },
+  "hy4flash": {
+   "label": "Hy4 Flash",
+   "score": 11.82,
+   "ci95": 2.85,
+   "agent": "mini-swe-agent",
+   "effort": "none",
+   "date": "Nov 16, 2026",
+   "cost_usd": 15.47,
+   "tokens": 4479123106
   }
  }
 }
