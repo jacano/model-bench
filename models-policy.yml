@@ -4,7 +4,7 @@
 # holds the gates and which ids clear them, so it carries no price that can go
 # stale on a provider's Tuesday.
 
-updated: 2026-11-16
+updated: 2026-11-22
 
 criteria:
   phases:
@@ -30,5 +30,3 @@ criteria:
 admitted:
   - id: deepseek-v4.1-flash
     note: cheapest route on a cold cache, completions
-  - id: claude-haiku-5.5
-    note: fastest writer measured, Anthropic route
