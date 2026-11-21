@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-18",
+ "updated": "2026-11-22",
  "about": "Plans a provider sells, the prices it publishes (evidence: nothing reads them), and the catalogue Command Code prices its models from. The turn (91.500 tokens) and the exchange rate are constants in bench.py, where they are commented.",
  "catalog": {
   "claude-fable-5-2": {
@@ -816,7 +816,7 @@
     "week_usd": 55.0,
     "five_hours_usd": 18.0
    },
-   "note": "credit multiplier per model, applied to the price OpenDesign publishes; $10 buys $220 of usage, so a dollar costs 4.5 cents. Go has a 7-day and a 5-hour window. Page 2026-11-18: three more tiers above Go (Plus $20 for 310, Pro $100 for 780, Max $200 for 1,410, with 20, 120 and 300 of Top Model credits and only a 7-day window), MiMo V2.6 Flash and Pro now cost 4x where they cost 1x, and DeepSeek V4.1 Flash carries a 0.25x off-peak promo with no dates published. The page's Coding Plan table names eleven models and carries no Claude, GPT or GLM-5.3 FlashX row; those stay in this block as the console showed them on 2026-11-16. Console catalogue 2026-11-18: all fourteen base rates here match it, and it prints no cached-write rate on twelve of them, where this block charges input for the same reason.",
+   "note": "credit multiplier per model, applied to the price OpenDesign publishes; $10 buys $220 of usage, so a dollar costs 4.5 cents. Go has a 7-day and a 5-hour window. Page 2026-11-18: three more tiers above Go (Plus $20 for 310, Pro $100 for 780, Max $200 for 1,410, with 20, 120 and 300 of Top Model credits and only a 7-day window), MiMo V2.6 Flash and Pro now cost 4x where they cost 1x, and DeepSeek V4.1 Flash carries a 0.25x off-peak promo with no dates published. The page's Coding Plan table names eleven models and carries no Claude, GPT or GLM-5.3 FlashX row; GPT and FlashX stay in this block as the console showed them on 2026-11-16, and Claude Haiku left on 2026-11-22: the console bills it at x2 against the $1 pay-as-you-go credit beside the plan, not this pool, so a pool price for it was a number the plan never charged. Console catalogue 2026-11-18: all fourteen base rates the block carried then matched it, and it prints no cached-write rate on twelve of them, where this block charges input for the same reason.",
    "models": [
     {
      "id": "deepseek-v4.1-flash",
@@ -892,16 +892,6 @@
      "cache": 0.075,
      "output": 1.25,
      "cache_write": 0.37
-    },
-    {
-     "id": "claude-haiku-5.5",
-     "factor": 4.0,
-     "billed_factor": 2.0,
-     "billed_note": "console, 2026-11-16: 2.888 in / 16 out billed 0,0006 credits against a list of 0,0003, so the plan charges x2. The page's multiplier table says 4x; `factor` keeps the page's number and `billed_factor` is what the cost uses.",
-     "input": 0.1,
-     "cache": 0.01,
-     "output": 0.5,
-     "cache_write": 0.125
     },
     {
      "id": "gpt-6-luna",
