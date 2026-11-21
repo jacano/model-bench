@@ -389,6 +389,10 @@ def cmd_verify(args) -> int:
 CHART_COLOURS = {"open-design": (96, 165, 250), "opengateway": (167, 139, 250),
                  "command-code": (251, 146, 60), "opencode": (244, 114, 182)}
 
+# A point earns a place on the chart only if the board can judge it: a sub-20
+# route says more about the benchmark's noise than about the plan.
+CHART_TB_MIN = 20.0
+
 
 def chart_rows(store: dict, boards: dict, day: date, mix=None) -> list[dict]:
     """Every priced model of every plan, with its board score and one cost."""
@@ -396,7 +400,7 @@ def chart_rows(store: dict, boards: dict, day: date, mix=None) -> list[dict]:
     measured = load_measured()
     for r in plan_rows(store, day):
         tb = board_score(boards, r.get("base") or r["model"])
-        if tb is None:
+        if tb is None or tb < CHART_TB_MIN:
             continue
         if mix:
             fresh, cache, written = mix
@@ -421,18 +425,15 @@ def pareto(rows: list[dict]) -> list[dict]:
     def beats(a, b):
         return (a["tb"] >= b["tb"] and a["cost"] <= b["cost"]
                 and (a["tb"] > b["tb"] or a["cost"] < b["cost"]))
-    # A model under the floor is not a candidate, so it cannot be on the frontier:
-    # a line that recommends what the chart rules out is a line nobody trusts.
-    eligible = [r for r in rows if r["tb"] >= GATES["static"]["tbench_min"]]
-    return sorted((r for r in eligible
-                   if not any(beats(o, r) for o in eligible if o is not r)),
+    return sorted((r for r in rows
+                   if not any(beats(o, r) for o in rows if o is not r)),
                   key=lambda r: r["cost"])
 
 
 PAGE_FILE = BENCH / "page.html"
 
 
-def write_page(rows: list[dict], store: dict, floor: float, subject: str,
+def write_page(rows: list[dict], store: dict, subject: str,
                path: Path) -> None:
     """Fill the template and write it: the page the site serves."""
     payload = []
@@ -451,7 +452,6 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str,
     html = (template.replace("__DATA__", json.dumps(payload))
                 .replace("__COLOURS__", json.dumps({k: "#%02x%02x%02x" % v
                                                     for k, v in CHART_COLOURS.items()}))
-                .replace("__FLOOR__", f"{floor:.1f}")
                 .replace("__PLANS__", json.dumps(
                     {name: {"plan": p["plan"], "fee": p.get("fee_usd"),
                             "label": p.get("label") or name}
@@ -463,8 +463,8 @@ def write_page(rows: list[dict], store: dict, floor: float, subject: str,
     print(f"written: {path}  ({len(rows)} models)")
 
 
-def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
-             subject: str, path: Path, show_floor: bool = False) -> None:
+def draw_png(rows: list[dict], front: list[dict], store: dict,
+             subject: str, path: Path) -> None:
     """The same table as a picture, with Pillow and no other dependency."""
     import math
 
@@ -524,13 +524,6 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
                 dr.text((x, H - M + 14), shown, font=f_tick, fill=dim, anchor="mt")
         decade *= 10
 
-    if show_floor:
-        y_floor = py(floor)
-        for x in range(M, W - M, 16):
-            dr.line([(x, y_floor), (min(x + 9, W - M), y_floor)], fill=(248, 113, 113), width=2)
-        dr.text((W - M - 8, y_floor - 10), f"Terminal-Bench floor {floor:.1f}", font=f_tick,
-                fill=(248, 113, 113), anchor="rb")
-
     if len(front) > 1:
         pts = [(px(r["cost"]), py(r["tb"])) for r in front]
         for width, shade in ((13, (18, 44, 32)), (7, (30, 74, 51)), (3, (74, 222, 128))):
@@ -579,8 +572,8 @@ def draw_png(rows: list[dict], front: list[dict], store: dict, floor: float,
 
     dr.line([(M, H - 78), (W - M, H - 78)], fill=(30, 38, 50))
     dr.text((M, H - 62), "Every model every plan in data/plans.json that Terminal-Bench "
-            "ranks. The chart and its controls are borrowed from linearbench.", font=f_tick,
-            fill=(110, 118, 129))
+            "ranks at 20 or above. The chart and its controls are borrowed from linearbench.",
+            font=f_tick, fill=(110, 118, 129))
     dr.text((W - M, H - 62), f"model-bench · {date.today().isoformat()}", font=f_tick,
             fill=(110, 118, 129), anchor="ra")
 
@@ -608,12 +601,11 @@ def cmd_chart(args) -> int:
         print("nothing to draw")
         return 1
     front = pareto(rows)
-    floor = GATES["static"]["tbench_min"]
 
     if args.html:
-        write_page(rows, store, floor, subject, Path(args.html))
+        write_page(rows, store, subject, Path(args.html))
         return 0
-    draw_png(rows, front, store, floor, subject, Path(args.out), args.floor)
+    draw_png(rows, front, store, subject, Path(args.out))
     return 0
 
 
@@ -1152,8 +1144,6 @@ def main() -> int:
     ch.add_argument("--out", default="frontier.png", help="where to write the png")
     ch.add_argument("--html", help="write an interactive page instead of the png")
     ch.add_argument("--mix", help="fresh,cache,out - price a turn of that shape")
-    ch.add_argument("--floor", action="store_true",
-                    help="draw the Terminal-Bench floor line")
     ch.add_argument("--today", type=date.fromisoformat,
                     help="a date (YYYY-MM-DD), for the promos of that day")
     ch.set_defaults(fn=cmd_chart)
