@@ -196,7 +196,12 @@ function render() {
     out += `<text class="axis" x="${M.l - 12}" y="${yOf(t) + 4}" text-anchor="end">${t}</text>`;
   }
   const ticks = state.scale === "log"
-    ? [0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.2,0.5,1,2,5,10]
+    ? (() => {
+        const out = [];
+        for (let decade = -4; decade <= 1; decade++)
+          for (const m of [1, 2, 5]) out.push(m * Math.pow(10, decade));
+        return out;
+      })()
     : [0,0.05,0.1,0.2,0.3,0.4,0.5,0.75,1,1.5,2,3];
   ticks.filter(t => t >= lo * 0.8 && t <= hi * 1.4).forEach(t => {
     const xl = state.scale === "log"
@@ -316,7 +321,7 @@ document.querySelectorAll(".chip").forEach(chip => {
 });
 
 document.getElementById("subject").textContent = "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out";
-document.getElementById("stamp").textContent = "generated 2026-11-21";
+document.getElementById("stamp").textContent = "generated 2026-11-22";
 render();
 </script>
 </body>
