@@ -389,9 +389,9 @@ def cmd_verify(args) -> int:
 CHART_COLOURS = {"open-design": (96, 165, 250),
                  "command-code": (251, 146, 60), "opencode": (244, 114, 182)}
 
-# A point earns a place on the chart only if the board can judge it: a sub-20
+# A point earns a place on the chart only if the board can judge it: a sub-30
 # route says more about the benchmark's noise than about the plan.
-CHART_TB_MIN = 20.0
+CHART_TB_MIN = 30.0
 
 
 def chart_rows(store: dict, boards: dict, day: date, mix=None) -> list[dict]:
@@ -572,7 +572,7 @@ def draw_png(rows: list[dict], front: list[dict], store: dict,
 
     dr.line([(M, H - 78), (W - M, H - 78)], fill=(30, 38, 50))
     dr.text((M, H - 62), "Every model every plan in data/plans.json that Terminal-Bench "
-            "ranks at 20 or above. The chart and its controls are borrowed from linearbench.",
+            "ranks at 30 or above. The chart and its controls are borrowed from linearbench.",
             font=f_tick, fill=(110, 118, 129))
     dr.text((W - M, H - 62), f"model-bench · {date.today().isoformat()}", font=f_tick,
             fill=(110, 118, 129), anchor="ra")
