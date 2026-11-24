@@ -386,7 +386,7 @@ def cmd_verify(args) -> int:
 
 # --------------------------------------------------------------------------- chart
 
-CHART_COLOURS = {"open-design": (96, 165, 250), "opengateway": (167, 139, 250),
+CHART_COLOURS = {"open-design": (96, 165, 250),
                  "command-code": (251, 146, 60), "opencode": (244, 114, 182)}
 
 # A point earns a place on the chart only if the board can judge it: a sub-20
