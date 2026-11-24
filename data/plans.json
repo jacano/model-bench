@@ -932,7 +932,7 @@
    "billing": "usage",
    "fee_usd": null,
    "credits_usd": null,
-   "note": "pay as you go: no ceiling and no windows, you pay for what you use. The list is 0,30 / 1,20 / 0,006 per million and the eco tier is published at -90 %, which is what `factor` says; `billed_factor` is what the invoice came to - 612,98M of input plus 548,5M of cache reads plus 1,37M of output for 4,61 dollars, an effective input of about 0,0067 per million. Context over 256K is billed at 2x, and the discount may end by notice. Page 2026-11-18: https://opengateway.ai/pricing answers 404; the rates below are the ones read on 2026-11-16.",
+   "note": "pay as you go: no ceiling and no windows, you pay for what you use. The list is 0,30 / 1,20 / 0,006 per million, and the Eco row stores the published always-on -90% schedule (0,03 / 0,12 / 0,0006). Page 2026-11-24: the site is live again; https://opengateway.ai/promo lists DeepSeek Eco at -90% and UltraFast time-of-day deals (DeepSeek V4.1 Flash 70% off 00:00-10:00 KST daily and all day Sat-Sun, 30% / 50% across the rest of the weekday; GLM 5.3 Flash 90% off 00:00-10:00 KST and 50% otherwise), and https://opengateway.ai/api/public/models returns the per-token schedule (discount_percent, until, next) - the two UltraFast rows are not carried here while their price changes by the hour. The 2026-11-16 invoice came in at 0,0067 input, deeper than the published -90%; that is the invoice, not the schedule.",
    "sources": {
     "pricing": "https://opengateway.ai/pricing",
     "credits": "https://opengateway.ai/pricing"
@@ -940,11 +940,11 @@
    "models": [
     {
      "id": "deepseek/deepseek-v4.1-flash-eco",
-     "input": 0.0067,
+     "input": 0.03,
      "cache": 0.0006,
      "output": 0.12,
      "factor": 1.0,
-     "note": "the -90% is not one multiplier: on the 4,61 dollar invoice the input came out at 0,0067 per million (published 0,030), cache at 0,0006 and output at 0,120, so the rates are stored as billed and the factor is 1. Context over 256K is billed at 2x and the discount may end by notice.",
+     "note": "published -90% schedule (list 0,30 / 1,20 / 0,006) read on 2026-11-24 from https://opengateway.ai/api/public/models; the 2026-11-16 invoice billed 0,0067 input, deeper than the schedule, and that reading is kept in the block note.",
      "cache_write": 0.0067
     }
    ],
