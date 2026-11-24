@@ -1130,12 +1130,12 @@
     },
     {
      "id": "glm-5.3",
-     "monthly_limit_usd": 500,
+     "monthly_limit_usd": 200,
      "input": 1.4,
      "cache": 0.26,
      "output": 4.4,
      "cache_write": 1.4,
-     "note": "2026-11-22: the $500 is the raised limit good through 2026-11-22; after that the endpoint's own number says what it becomes."
+     "note": "2026-11-24: the $500 promo ran through 2026-11-22 and the Go models endpoint now returns 200, the standard limit, so the row is back on it."
     },
     {
      "id": "longcat-2.0",
