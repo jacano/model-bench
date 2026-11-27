@@ -650,9 +650,15 @@ def chart_rows(store: dict, boards: dict, day: date, mix=None) -> list[dict]:
             state = "admitted"
         elif m is None:
             state = "unmeasured"
-        elif fails_measured(m, tb, GATES["measured"]) + fails_fitness(m, GATES["fitness"]):
-            state = "measured, fails"
         else:
+            bad = fails_measured(m, tb, GATES["measured"]) + fails_fitness(m, GATES["fitness"])
+            if bad:
+                # A row our own measurement rejected is not a point on the chart. The
+                # gates are what "worth using" means here, and drawing a row that fails
+                # them quotes a price for work nobody should send it.
+                print(f"not drawn: {r['model']} on {r['provider']} - measured, fails: "
+                      f"{', '.join(bad)}")
+                continue
             state = "measured, passes"
         out.append({**r, "tb": tb, "cost": cost, "state": state})
     return out
@@ -810,7 +816,7 @@ def draw_png(rows: list[dict], front: list[dict], store: dict,
 
     dr.line([(M, H - 78), (W - M, H - 78)], fill=(30, 38, 50))
     dr.text((M, H - 62), "Every model every plan in data/plans.json that Terminal-Bench "
-            "ranks at 30 or above. The chart and its controls are borrowed from linearbench.",
+            "ranks at 30+ and our own run did not fail. Controls: linearbench.",
             font=f_tick, fill=(110, 118, 129))
     dr.text((W - M, H - 62), f"model-bench · {date.today().isoformat()}", font=f_tick,
             fill=(110, 118, 129), anchor="ra")
