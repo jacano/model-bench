@@ -25,7 +25,7 @@ import tempfile
 import time
 from datetime import date, datetime
 from pathlib import Path
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 BENCH = Path(__file__).resolve().parent
@@ -64,6 +64,20 @@ GATEWAYS = {
 # mostly moves: 97% cache, 2.5% fresh input, 0.5% output. `--mix` prices another shape.
 BLENDED = (25_000, 970_000, 5_000)
 BLENDED_SUBJECT = "dollars per million tokens at 97% cache, 2.5% fresh, 0.5% out"
+
+# What a plan publishes that a machine can read, so `audit` can re-derive every number
+# in its block and name the field it came from. A plan without an entry here is read by
+# hand off its pages, and its `sources` in data/plans.json say which ones; the block's
+# `billing_seen` and `note` carry the date the reading was taken.
+AUDIT = {
+    "open-kodo": {
+        "plans": "https://openkodo.dev/api/public/plans",
+        "models": "https://openkodo.dev/api/public/models",
+    },
+    "opencode": {
+        "models": "https://opencode.ai/inference/go/v1/models",
+    },
+}
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -301,6 +315,28 @@ def plan_rows(store: dict, day: date, want: str | None = None) -> list[dict]:
     return out
 
 
+def explain(r: dict, store: dict) -> None:
+    """One row's arithmetic, so a number on the page can be recomputed by hand."""
+    plan = store["providers"][r["provider"]]
+    fee, ceiling = plan.get("fee_usd") or 0.0, r.get("ceiling") or 0.0
+    scale = fee / ceiling if ceiling else 1.0
+    blend = 0.025 * r["input"] + 0.97 * r["cache"] + 0.005 * r["output"]
+    print(f"\n  {r['model']} on {plan.get('label') or r['provider']}")
+    print(f"    list       input {r['list']['input']:g}  cache read {r['list']['cache']:g}  "
+          f"output {r['list']['output']:g}   per 1M tokens")
+    if r["model"].endswith("(peak)"):
+        factor = r["input"] / r["list"]["input"] / scale if scale else 0.0
+        print(f"    peak       the list rate x{factor:g}, on the peak hours")
+    print(f"    published  {', '.join((AUDIT.get(r['provider']) or plan.get('sources', {})).values())}")
+    print(f"    ceiling    ${ceiling:g} a month, the tightest of the plan's limits "
+          f"({r.get('caps at')})")
+    print(f"    fee        ${fee:g} / ${ceiling:g} = {scale:.6f}")
+    print(f"    our cost   input {r['input']:.6f}  cache read {r['cache']:.6f}  "
+          f"output {r['output']:.6f}")
+    print(f"    blended    0.025 x {r['input']:.6f} + 0.97 x {r['cache']:.6f} + 0.005 x "
+          f"{r['output']:.6f} = {blend:.6f}")
+
+
 def cmd_plan(args) -> int:
     """The price of a million tokens of each kind, after every multiplier."""
     store, boards = plans(), tbench()
@@ -326,6 +362,9 @@ def cmd_plan(args) -> int:
         print(f"  {r['model'][:40]:40s} {('%.1f' % tb) if tb else '-':>4s} {r['provider']:14s} "
               f"{r['input']:>10.5f} {r['cache']:>11.5f} {r['output']:>10.5f} "
               f"{blended:>10.5f}")
+    if args.why:
+        for r in sorted(rows, key=lambda x: (x["input"], x["provider"])):
+            explain(r, store)
     return 0
 
 
@@ -404,6 +443,181 @@ def cmd_verify(args) -> int:
             print(f"  - {problem}")
         return 1
     print("\nOK: the block's price is the price the console billed")
+    return 0
+
+
+# --------------------------------------------------------------------------- audit
+
+def fetch_json(url: str) -> dict:
+    """The plan's own feed, as it serves it: the audit reads it, it does not cache it."""
+    req = Request(url, headers={"User-Agent": "curl/8.5.0", "Accept": "application/json"})
+    with urlopen(req, timeout=60) as resp:
+        return json.loads(resp.read().decode())
+
+
+def feed_open_kodo(store: dict, provider: str, day: date) -> tuple[list[str], list[str], str]:
+    """Every number in the OpenKodo block against /api/public/plans and /api/public/models."""
+    plan = store["providers"][provider]
+    plans = fetch_json(AUDIT[provider]["plans"])
+    models = {m["code"]: m for m in fetch_json(AUDIT[provider]["models"])["models"]}
+    go = next(p for p in plans["plans"] if p["code"] == "go")
+    caps = plans["model_limits"]["go"]
+
+    problems, notes = [], []
+    for label, got, want, field in (
+        ("fee", plan["fee_usd"], go["price_cents"] / 100, "plans[go].price_cents"),
+        ("credits", plan["credits_usd"], go["included_credits_micros"] / 1e6,
+         "plans[go].included_credits_micros"),
+        ("5-hour cap", plan["windows"]["five_hours_usd"], go["credits_per_5h_micros"] / 1e6,
+         "plans[go].credits_per_5h_micros"),
+        ("7-day cap", plan["windows"]["week_usd"], go["credits_per_week_micros"] / 1e6,
+         "plans[go].credits_per_week_micros"),
+    ):
+        if abs(got - want) > 1e-6:
+            problems.append(f"{label}: block {got:g}, feed {want:g} ({field})")
+
+    rows = [r for r in plan_rows(store, day) if r["provider"] == provider]
+    for r in rows:
+        if r["model"].endswith("(peak)"):
+            continue
+        code = r["base"]
+        src = models.get(code)
+        if src is None:
+            problems.append(f"{code}: the block prices it, the feed's catalog does not carry it")
+            continue
+        off = src["offpeak_input_price_micros_per_mtok"]
+        # The feed's nominal price is the peak half where it has an off-peak one, so the
+        # row's base rate is the off-peak half and the bracket is the ratio between them.
+        want = {
+            "input": (off or src["input_price_micros_per_mtok"]) / 1e6,
+            "cache": (src["offpeak_cached_input_price_micros_per_mtok"] if off
+                      else src["cached_input_price_micros_per_mtok"]) / 1e6,
+            "output": (src["offpeak_output_price_micros_per_mtok"] if off
+                       else src["output_price_micros_per_mtok"]) / 1e6,
+            "cache_write": src["cache_write_price_micros_per_mtok"] / 1e6,
+        }
+        for key, value in want.items():
+            got = r["list"].get(key)
+            if value and got is None:
+                problems.append(f"{code}: {key} missing, the feed prices {value:g}")
+            elif got is not None and abs(got - value) > 1e-6:
+                problems.append(f"{code}: {key} {got:g}, the feed {value:g}"
+                                f" ({key}_price_micros_per_mtok)")
+        if off:
+            ratio = src["input_price_micros_per_mtok"] / off
+            got = next((m.get("peak_multiplier") for m in plan["models"] if m["id"] == code), None)
+            if got is None or abs(got - ratio) > 1e-9:
+                problems.append(f"{code}: peak bracket {got}, the feed's ratio {ratio:g}")
+        cap = caps.get(code)
+        got = plan["allowances_usd"].get(next(m["name"] for m in plan["models"] if m["id"] == code))
+        if cap is None:
+            problems.append(f"{code}: priced here, not in model_limits.go")
+        elif got is None or abs(got - cap / 1e6) > 1e-6:
+            problems.append(f"{code}: cap {got}, the feed {cap / 1e6:g} (model_limits.go[{code}])")
+
+    carried = {r["base"] for r in rows}
+    absent = [c for c in sorted(caps) if c not in carried and models.get(c, {}).get("is_active")]
+    if absent:
+        notes.append(f"{len(absent)} published chat models are not priced here: "
+                     + ", ".join(absent))
+    return problems, notes, f"{len(carried)} rows"
+
+
+def feed_opencode(store: dict, provider: str, day: date) -> tuple[list[str], list[str], str]:
+    """Every number in the OpenCode block against its Go models endpoint."""
+    plan = store["providers"][provider]
+    data = {m["id"]: m for m in fetch_json(AUDIT[provider]["models"])["data"]}
+    problems, notes = [], []
+    rows = [r for r in plan_rows(store, day) if r["provider"] == provider]
+    for r in rows:
+        if r["model"].endswith("(peak)"):
+            continue
+        src = data.get(r["base"])
+        if src is None:
+            # A row the endpoint has dropped can stay while the plan's console still
+            # sells it, but only if the block says so in its own note.
+            entry = next(m for m in plan["models"] if m["id"] == r["base"])
+            line = (f"{r['base']}: not in the endpoint; kept on the block's note"
+                    if entry.get("note") else
+                    f"{r['base']}: the block prices it, the endpoint does not list it")
+            if entry.get("note"):
+                notes.append(line)
+            else:
+                problems.append(line)
+            continue
+        cost = src["cost"]["text"]
+        cache = cost["input"].get("cache") or {}
+        want = {"input": cost["input"]["price"], "cache": cache.get("read"),
+                "output": cost["output"]["price"]}
+        # Where the endpoint prints no cache-write rate the block charges input, which is
+        # the rule its note states; a printed zero is a free write and is checked as one.
+        # A write priced per cache lifetime is a dict: any band matching is the number.
+        write = cache["write"] if "write" in cache else cost["input"]["price"]
+        bands = list(write.values()) if isinstance(write, dict) else [write]
+        for key, value in want.items():
+            if value is None:
+                continue
+            got = r["list"].get(key)
+            if got is None:
+                problems.append(f"{r['base']}: {key} missing, the endpoint prices {value:g}")
+            elif abs(got - value) > 1e-6:
+                problems.append(f"{r['base']}: {key} {got:g}, the endpoint {value:g}")
+        got = r["list"].get("cache_write")
+        if got is None:  # the block charges input where it carries no write rate
+            got = r["list"].get("input")
+        if got is None or not any(abs(got - band) <= 1e-6 for band in bands):
+            problems.append(f"{r['base']}: cache write {got}, the endpoint "
+                            f"{' / '.join(f'{b:g}' for b in bands)}")
+        cap = (src.get("go") or {}).get("monthly_usage") or {}
+        got = next(m.get("monthly_limit_usd") for m in plan["models"] if m["id"] == r["base"])
+        if cap.get("go") is not None and got is not None and abs(got - cap["go"]) > 1e-6:
+            problems.append(f"{r['base']}: cap {got:g}, the endpoint {cap['go']:g}"
+                            f" (go.monthly_usage.go)")
+    carried = {r["base"] for r in rows}
+    absent = [i for i in sorted(data) if i not in carried and data[i].get("type") == "chat"]
+    if absent:
+        notes.append(f"{len(absent)} chat models the endpoint lists are not priced here: "
+                     + ", ".join(absent))
+    return problems, notes, f"{len(carried)} rows"
+
+
+FEEDS = {"open-kodo": feed_open_kodo, "opencode": feed_opencode}
+
+
+def cmd_audit(args) -> int:
+    """The block against the plan's own published feed, field by field."""
+    store = plans()
+    day = args.today or date.today()
+    problems, seen = [], 0
+    for provider, plan in store["providers"].items():
+        if args.provider and provider != args.provider:
+            continue
+        if provider not in FEEDS:
+            print(f"{provider}: no machine-readable feed; read by hand off "
+                  f"{' and '.join(plan['sources'].values())}")
+            continue
+        seen += 1
+        print(f"{provider}  {plan.get('label') or provider}")
+        for kind, url in AUDIT[provider].items():
+            print(f"  {kind:6s} {url}")
+        try:
+            found, notes, size = FEEDS[provider](store, provider, day)
+        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+            problems.append(f"{provider}: could not read the feed ({exc})")
+            print(f"  unreachable: {exc}")
+            continue
+        for note in notes:
+            print(f"  note   {note}")
+        if found:
+            problems += [f"{provider}: {p}" for p in found]
+        print(f"  {'FAIL ' if found else 'ok   '} {size} checked, {len(found)} disagreements")
+    print()
+    if problems:
+        print("FAIL:")
+        for problem in problems:
+            print(f"  - {problem}")
+        return 1
+    print(f"OK: {seen} blocks are the numbers their plans publish")
     return 0
 
 
@@ -1136,10 +1350,18 @@ def main() -> int:
     pl.add_argument("--today", type=date.fromisoformat,
                    help="a date (YYYY-MM-DD), for the promos of that day")
     pl.add_argument("--model", help="one model; without it, everything the board ranks")
+    pl.add_argument("--why", action="store_true",
+                    help="print each row's arithmetic: list rate, ceiling, fee, blended")
     pl.set_defaults(fn=cmd_plan)
 
     v = sub.add_parser("verify", help="the usage records against the plan's prices")
     v.set_defaults(fn=cmd_verify)
+
+    au = sub.add_parser("audit", help="the blocks against the plans' own published feeds")
+    au.add_argument("--provider", help="one plan; without it, every plan this knows how to read")
+    au.add_argument("--today", type=date.fromisoformat,
+                    help="a date (YYYY-MM-DD), for the promos of that day")
+    au.set_defaults(fn=cmd_audit)
 
     ch = sub.add_parser("chart", help="the Pareto picture: price against the board")
     ch.add_argument("--out", default="frontier.png", help="where to write the png")

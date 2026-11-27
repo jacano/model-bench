@@ -15,9 +15,11 @@ capability, and the frontier through whatever nothing beats. The picture it publ
 
 ```bash
 python bench.py plan      # what a million tokens costs, per model, per plan
+python bench.py plan --model deepseek-v4.1-flash-1017 --why   # one row's arithmetic
 python bench.py chart     # price against the board, and the frontier through it
 python bench.py chart --mix 25000,970000,5000   # another shape of a million tokens
 python bench.py verify    # the console's recorded calls against the plan's price
+python bench.py audit     # every block against the plan's own published feed
 python bench.py measure   # the stored rows against the gates, and the menu
 python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 ```
@@ -31,9 +33,12 @@ low says more about the benchmark's noise than about the plan, and the frontier 
 whatever is drawn. The 38 admission gate stays in `models-policy.yml`, where the menu uses
 it; the chart draws no line for it.
 `verify` is the other kind of evidence: it recomputes fifty calls the console recorded, from
-their unit prices, and checks that the block's price is the price that was billed. `measure
---api responses` sends a route down the Responses shape, which is the one OpenDesign serves,
-instead of chat completions.
+their unit prices, and checks that the block's price is the price that was billed. `audit`
+re-reads the plans that publish a machine-readable feed and prints every disagreement with
+the field it came from — a wrong rate, a wrong cap, a row the feed has dropped — so a number
+on the page can be traced back to the JSON it was read from. `measure --api responses` sends
+a route down the Responses shape, which is the one OpenDesign serves, instead of chat
+completions.
 
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.
@@ -80,7 +85,29 @@ Prices from the provider's own card and credits pages, named under `sources` in
 from Terminal-Bench, executed and graded. Behaviour measured by `measure` against the live
 route, in `models.csv`. The price is checked against what was billed, in `data/usage.json`:
 `verify` recomputes every recorded call from its unit prices. The provider never grades
-itself, and only `measure` and `agentic` touch the network.
+itself, and only `measure`, `agentic` and `audit` touch the network.
+
+Two plans publish a feed a program can read, and `audit` reads it field by field:
+
+| Plan | The number | Where it is read, and as what |
+| --- | --- | --- |
+| OpenKodo Go | fee, included credits, 5-hour and 7-day caps | `https://openkodo.dev/api/public/plans` → `plans[code=go].price_cents`, `included_credits_micros`, `credits_per_5h_micros`, `credits_per_week_micros` (micro-dollars) |
+| | per-model monthly cap | the same feed → `model_limits.go[code]`, micro-dollars |
+| | input, cache read, output, cache write | `https://openkodo.dev/api/public/models` → `input_price_micros_per_mtok`, `cached_input_price_micros_per_mtok`, `output_price_micros_per_mtok`, `cache_write_price_micros_per_mtok`, ÷ 1,000,000 |
+| | its peak bracket | the same row's `offpeak_*` prices against the nominal ones: the feed's nominal price is the peak half, the block carries the off-peak half |
+| OpenCode Go | rates and per-model cap | `https://opencode.ai/inference/go/v1/models` → `cost.text.input.price`, `.input.cache.read`, `.input.cache.write`, `.output.price`, and `go.monthly_usage.go` |
+
+Command Code GOAT and OpenDesign Go have no feed, so their blocks are read by hand off the
+pages under `sources`; `billing_seen` and the note carry the date of the reading, and a row
+the feed no longer lists stays only while the block's own note says why (OpenCode's `glm-5.2`
+is the one such row). A model the feed prices above a context threshold is left out of every
+block, because a one-price table cannot hold it: `audit` lists those too, under `note`.
+
+The arithmetic is one line, and `plan` prints its result: `list rate × multiplier × fee ÷
+ceiling`, the ceiling being the tightest of the plan's credits, the model's own allowance, and
+its 5-hour and 7-day caps, each converted to a month. That is why a $4.00/M list model can
+read $2.33/M on the chart: the fee is being spread over the $17 a month the plan lets it
+spend, and the page's tooltip prints that ceiling next to the price.
 
 ## License
 
