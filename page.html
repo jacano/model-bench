@@ -44,6 +44,7 @@
   .seg button:hover { color:var(--ink); background:var(--panel2); }
   .seg button[aria-pressed="true"] { color:var(--ink); background:#1c2533; }
   .count { color:var(--faint); font-size:12.5px; margin-left:2px; }
+  .hint { color:var(--faint); font-size:11.5px; opacity:.8; }
   .legend { display:flex; flex-wrap:wrap; gap:8px; margin-left:auto; }
   .chip {
     display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
@@ -65,6 +66,8 @@
   .dot { cursor:pointer; transition:r .12s, opacity .12s; }
   .dot:hover { r:9; }
   .dimmed { opacity:.18; }
+  svg { cursor:grab; }
+  svg.grabbing { cursor:grabbing; }
   .lbl rect { fill:#141a23; stroke:var(--front); stroke-width:1; }
   .lbl text { fill:var(--ink); font-size:11.5px; }
 
@@ -129,8 +132,10 @@
     <div class="seg" id="extra">
       <button data-v="front" aria-pressed="true">Frontier</button>
       <button data-v="labels" aria-pressed="true">Labels</button>
+      <button data-v="reset" title="Back to the whole plot">Reset</button>
     </div>
     <span class="count" id="count"></span>
+    <span class="hint">scroll to zoom · drag to pan · double-click to reset</span>
     <div class="legend" id="legend"></div>
   </div>
 
@@ -154,10 +159,82 @@
 const ROWS = __DATA__;
 const COLOURS = __COLOURS__;
 const PLANS = __PLANS__;
-const state = { scale:"log", dir:"asc", front:true, labels:true, hidden:new Set() };
+const state = { scale:"log", dir:"asc", front:true, labels:true, hidden:new Set(), win:null };
 const W = 1400, H = 730, M = { l: 74, r: 28, t: 22, b: 58 };
 const svg = document.getElementById("chart");
 const tip = document.getElementById("tip");
+
+// Zoom is a window into the data, not a magnified drawing: the axes are recomputed for it,
+// so the dots, the labels and the type keep their size and only the range changes.
+const toS   = v => state.scale === "log" ? Math.log10(v) : v;
+const fromS = v => state.scale === "log" ? Math.pow(10, v) : v;
+
+const domainOf = rows => {
+  const costs = rows.map(cost), tbs = rows.map(r => r.tb);
+  return { lo: Math.min.apply(null, costs) * 0.8, hi: Math.max.apply(null, costs) * 1.4,
+           y0: Math.min.apply(null, tbs) - 4, y1: Math.max.apply(null, tbs) + 5 };
+};
+
+const windowOf = d => {
+  const w = state.win;
+  if (!w) return d;
+  const cl = (v, a, b) => Math.min(b, Math.max(a, v));
+  let s0 = cl(toS(w.c0), toS(d.lo), toS(d.hi));
+  let s1 = cl(toS(w.c1), toS(d.lo), toS(d.hi));
+  // A sliver would divide by nothing: never narrower than 2% of the domain.
+  const minS = 0.02 * (toS(d.hi) - toS(d.lo));
+  if (s1 - s0 < minS) { const m = (s0 + s1) / 2; s0 = m - minS / 2; s1 = m + minS / 2; }
+  let y0 = cl(w.t0, d.y0, d.y1), y1 = cl(w.t1, d.y0, d.y1);
+  const minT = 0.02 * (d.y1 - d.y0);
+  if (y1 - y0 < minT) { const m = (y0 + y1) / 2; y0 = m - minT / 2; y1 = m + minT / 2; }
+  return { lo: fromS(s0), hi: fromS(s1), y0, y1 };
+};
+
+const dataAt = (clientX, clientY, d) => {
+  const box = svg.getBoundingClientRect();
+  const cl = v => Math.min(1, Math.max(0, v));
+  const fx = cl((clientX - box.left) / box.width);
+  const fy = cl((clientY - box.top) / box.height);
+  let u = (fx * W - M.l) / (W - M.l - M.r);
+  if (state.dir === "desc") u = 1 - u;
+  const v = (H - M.b - fy * H) / (H - M.t - M.b);
+  return { cost: fromS(toS(d.lo) + u * (toS(d.hi) - toS(d.lo))),
+           tb: d.y0 + cl(v) * (d.y1 - d.y0) };
+};
+
+const niceStep = span => {
+  for (const s of [1, 2, 5, 10, 20, 25, 50, 100]) if (span / s <= 7) return s;
+  return 100;
+};
+
+const logTicks = (lo, hi) => {
+  const span = Math.log10(hi) - Math.log10(lo);
+  const ms = span > 1.2 ? [1, 2, 5] : span > 0.5 ? [1, 2, 3, 5]
+           : [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8];
+  const out = [];
+  for (let dec = Math.floor(Math.log10(lo)); dec <= Math.ceil(Math.log10(hi)); dec++)
+    for (const m of ms) {
+      const t = m * Math.pow(10, dec);
+      if (t >= lo * 0.999 && t <= hi * 1.001) out.push(t);
+    }
+  return out;
+};
+
+const linTicks = (lo, hi) => {
+  const raw = (hi - lo) / 6;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 5, 10].map(k => k * mag).find(s => (hi - lo) / s <= 8) || mag * 10;
+  const out = [];
+  for (let t = Math.ceil(lo / step) * step; t <= hi * 1.0000001; t += step) out.push(t);
+  return out;
+};
+
+const tickLabel = v => {
+  if (v >= 1) return "$" + v;
+  return "$" + v.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+};
+
+const resetView = () => { state.win = null; render(); };
 
 const BLEND = [25000, 970000, 5000];
 const costOf = r => (BLEND[0] * r.eff.input + BLEND[1] * r.eff.cache + BLEND[2] * r.eff.output) / 1e6;
@@ -177,44 +254,33 @@ function frontier(rows) {
 function render() {
   const rows = visible();
   if (!rows.length) { svg.innerHTML = ""; return; }
-  const costs = rows.map(cost);
-  const lo = Math.min.apply(null, costs), hi = Math.max.apply(null, costs);
-  const xOf = r => {
-    const l = cost(r);
-    let x = state.scale === "log"
-      ? M.l + (Math.log10(l) - Math.log10(lo * 0.8)) /
-              (Math.log10(hi * 1.4) - Math.log10(lo * 0.8)) * (W - M.l - M.r)
-      : M.l + (l - lo * 0.85) / (hi * 1.15 - lo * 0.85) * (W - M.l - M.r);
+  const d = windowOf(domainOf(rows));
+  const xAt = value => {
+    const u = (toS(value) - toS(d.lo)) / (toS(d.hi) - toS(d.lo));
+    const x = M.l + u * (W - M.l - M.r);
     return state.dir === "desc" ? W - M.r - (x - M.l) : x;
   };
-  const tbs = rows.map(r => r.tb);
-  const y0 = Math.min.apply(null, tbs) - 4, y1 = Math.max.apply(null, tbs) + 5;
-  const yOf = t => H - M.b - (t - y0) / (y1 - y0) * (H - M.t - M.b);
+  const xOf = r => xAt(cost(r));
+  const yOf = t => H - M.b - (t - d.y0) / (d.y1 - d.y0) * (H - M.t - M.b);
 
-  let out = "";
-  for (let t = Math.ceil(y0 / 10) * 10; t <= y1; t += 10) {
+  // The axes stay outside the clip; the marks inside it, so a zoomed frontier runs off
+  // the edge instead of over the header, and the axis text is never cut.
+  let out = `<defs><clipPath id="plotclip"><rect x="${M.l}" y="${M.t}"`
+          + ` width="${W - M.l - M.r}" height="${H - M.t - M.b}"/></clipPath></defs>`;
+  const yStep = niceStep(d.y1 - d.y0);
+  for (let t = Math.ceil(d.y0 / yStep) * yStep; t <= d.y1 + 1e-9; t += yStep) {
     out += `<line class="grid" x1="${M.l}" y1="${yOf(t)}" x2="${W - M.r}" y2="${yOf(t)}"/>`;
     out += `<text class="axis" x="${M.l - 12}" y="${yOf(t) + 4}" text-anchor="end">${t}</text>`;
   }
-  const ticks = state.scale === "log"
-    ? (() => {
-        const out = [];
-        for (let decade = -4; decade <= 1; decade++)
-          for (const m of [1, 2, 5]) out.push(m * Math.pow(10, decade));
-        return out;
-      })()
-    : [0,0.05,0.1,0.2,0.3,0.4,0.5,0.75,1,1.5,2,3];
-  ticks.filter(t => t >= lo * 0.8 && t <= hi * 1.4).forEach(t => {
-    const xl = state.scale === "log"
-      ? M.l + (Math.log10(t) - Math.log10(lo * 0.8)) /
-              (Math.log10(hi * 1.4) - Math.log10(lo * 0.8)) * (W - M.l - M.r)
-      : M.l + (t - lo * 0.85) / (hi * 1.15 - lo * 0.85) * (W - M.l - M.r);
-    const xx = state.dir === "desc" ? W - M.r - (xl - M.l) : xl;
+  const ticks = state.scale === "log" ? logTicks(d.lo, d.hi) : linTicks(d.lo, d.hi);
+  ticks.forEach(t => {
+    const xx = xAt(t);
     out += `<line class="grid soft" x1="${xx}" y1="${M.t}" x2="${xx}" y2="${H - M.b}"/>`;
-    out += `<text class="axis" x="${xx}" y="${H - M.b + 21}" text-anchor="middle">${money(t)}</text>`;
+    out += `<text class="axis" x="${xx}" y="${H - M.b + 21}" text-anchor="middle">${tickLabel(t)}</text>`;
   });
 
   const front = frontier(rows);
+  out += `<g clip-path="url(#plotclip)">`;
   if (state.front && front.length > 1) {
     const path = front.map(r => `${xOf(r)},${yOf(r.tb)}`).join(" ");
     out += `<polyline class="frontglow" points="${path}"/><polyline class="front" points="${path}"/>`;
@@ -228,8 +294,12 @@ function render() {
       !dots.some(d => d !== own && Math.abs(d.x - (x + w / 2)) < w / 2 + 11 &&
                                     Math.abs(d.y - (y + h / 2)) < h / 2 + 11);
     front.forEach(r => {
+      const own = { x: xOf(r), y: yOf(r.tb) };
+      // A point outside the window has no label, or it would hang off the edge.
+      if (own.x < M.l - 1 || own.x > W - M.r + 1 ||
+          own.y < M.t - 1 || own.y > H - M.b + 1) return;
       const text = r.model.split("/").pop() + "  " + r.tb.toFixed(1);
-      const w = text.length * 6.1 + 16, h = 20, own = { x: xOf(r), y: yOf(r.tb) };
+      const w = text.length * 6.1 + 16, h = 20;
       const spots = [[14,-26],[14,12],[-w-14,-26],[-w-14,12],[14,-50],[14,36]];
       let spot = null;
       for (const s of spots) {
@@ -253,12 +323,20 @@ function render() {
     out += `<circle class="dot" data-i="${ROWS.indexOf(r)}" cx="${xOf(r)}" cy="${yOf(r.tb)}"
               r="7" fill="${COLOURS[r.provider] || '#94a3b8'}" stroke="#0a0d12" stroke-width="1.5"/>`;
   });
+  out += "</g>";
   svg.innerHTML = out;
   svg.querySelectorAll(".dot").forEach(dot => {
     const row = ROWS[+dot.dataset.i];
-    dot.addEventListener("mouseenter", e => showTip(row, e));
+    dot.addEventListener("mouseenter", e => {
+      // In a cluster the hovered point has to win: the rest step back.
+      svg.querySelectorAll(".dot").forEach(d => d.classList.toggle("dimmed", d !== dot));
+      showTip(row, e);
+    });
     dot.addEventListener("mousemove", moveTip);
-    dot.addEventListener("mouseleave", () => tip.style.opacity = 0);
+    dot.addEventListener("mouseleave", () => {
+      svg.querySelectorAll(".dot").forEach(d => d.classList.remove("dimmed"));
+      tip.style.opacity = 0;
+    });
   });
   document.getElementById("count").textContent =
     rows.length + " points · " + front.length + " on the frontier";
@@ -299,14 +377,68 @@ function moveTip(e) {
 
 document.querySelectorAll(".seg button").forEach(btn => {
   btn.addEventListener("click", () => {
+    if (btn.dataset.v === "reset") { resetView(); return; }
     const group = btn.parentElement.id;
     if (group === "extra") state[btn.dataset.v] = !state[btn.dataset.v];
     else state[group] = btn.dataset.v;
-    btn.parentElement.querySelectorAll("button").forEach(b =>
-      b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
+    btn.parentElement.querySelectorAll("button").forEach(b => {
+      if (b.dataset.v === "reset") return;
+      b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+    });
     render();
   });
 });
+
+// Wheel zooms the window around the cursor, drag pans it, double-click comes home.
+svg.addEventListener("wheel", e => {
+  e.preventDefault();
+  const rows = visible();
+  if (!rows.length) return;
+  const d = windowOf(domainOf(rows));
+  const at = dataAt(e.clientX, e.clientY, d);
+  const k = Math.exp(e.deltaY * 0.0012);
+  const lo = toS(d.lo), hi = toS(d.hi), c = toS(at.cost);
+  state.win = {
+    c0: fromS(c - (c - lo) * k), c1: fromS(c + (hi - c) * k),
+    t0: at.tb - (at.tb - d.y0) * k, t1: at.tb + (d.y1 - at.tb) * k,
+  };
+  render();
+}, { passive:false });
+
+let drag = null;
+svg.addEventListener("pointerdown", e => {
+  if (e.button !== 0) return;
+  const rows = visible();
+  if (!rows.length) return;
+  drag = { x:e.clientX, y:e.clientY, d: windowOf(domainOf(rows)), moved:false };
+  try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+});
+svg.addEventListener("pointermove", e => {
+  if (!drag) return;
+  // A press that never moves is a hover, not a pan: wait for four pixels.
+  if (!drag.moved && Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) < 4) return;
+  drag.moved = true;
+  svg.classList.add("grabbing");
+  // The data that was under the pointer when the drag started follows the pointer.
+  const from = dataAt(drag.x, drag.y, drag.d);
+  const to = dataAt(e.clientX, e.clientY, drag.d);
+  const shiftC = toS(from.cost) - toS(to.cost);
+  const shiftT = from.tb - to.tb;
+  state.win = {
+    c0: fromS(toS(drag.d.lo) + shiftC), c1: fromS(toS(drag.d.hi) + shiftC),
+    t0: drag.d.y0 + shiftT, t1: drag.d.y1 + shiftT,
+  };
+  render();
+});
+const endDrag = e => {
+  if (!drag) return;
+  drag = null;
+  svg.classList.remove("grabbing");
+  try { svg.releasePointerCapture(e.pointerId); } catch (_) {}
+};
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointercancel", endDrag);
+svg.addEventListener("dblclick", resetView);
 
 document.getElementById("legend").innerHTML = Object.keys(PLANS).map(k => {
   const p = PLANS[k];
