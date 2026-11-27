@@ -87,7 +87,8 @@ route, in `models.csv`. The price is checked against what was billed, in `data/u
 `verify` recomputes every recorded call from its unit prices. The provider never grades
 itself, and only `measure`, `agentic` and `audit` touch the network.
 
-Two plans publish a feed a program can read, and `audit` reads it field by field:
+Three of the four plans publish something a program can read, and `audit` reads each as far
+as it goes:
 
 | Plan | The number | Where it is read, and as what |
 | --- | --- | --- |
@@ -96,12 +97,14 @@ Two plans publish a feed a program can read, and `audit` reads it field by field
 | | input, cache read, output, cache write | `https://openkodo.dev/api/public/models` → `input_price_micros_per_mtok`, `cached_input_price_micros_per_mtok`, `output_price_micros_per_mtok`, `cache_write_price_micros_per_mtok`, ÷ 1,000,000 |
 | | its peak bracket | the same row's `offpeak_*` prices against the nominal ones: the feed's nominal price is the peak half, the block carries the off-peak half |
 | OpenCode Go | rates and per-model cap | `https://opencode.ai/inference/go/v1/models` → `cost.text.input.price`, `.input.cache.read`, `.input.cache.write`, `.output.price`, and `go.monthly_usage.go` |
+| Command Code GOAT | that every row is still sold | `https://api.commandcode.ai/provider/v1/models` → the roster's `id` and `name`; it carries ids, names and context and no price, so rates and allowances stay hand-read, and `feed_exceptions` names the rows the plan sells outside the roster |
 
-Command Code GOAT and OpenDesign Go have no feed, so their blocks are read by hand off the
-pages under `sources`; `billing_seen` and the note carry the date of the reading, and a row
-the feed no longer lists stays only while the block's own note says why (OpenCode's `glm-5.2`
-is the one such row). A model the feed prices above a context threshold is left out of every
-block, because a one-price table cannot hold it: `audit` lists those too, under `note`.
+OpenDesign Go has no feed at all — `/api/auth/*` and `/api/v1/public/referral-visits` are
+the only endpoints its pages mention — so its block is read by hand off the pages under
+`sources`. `billing_seen` and the note carry the date of each reading, and a row the feed no
+longer lists stays only while the block's own note says why (OpenCode's `glm-5.2` is the one
+such row). A model the feed prices above a context threshold is left out of every block,
+because a one-price table cannot hold it: `audit` lists those too, under `note`.
 
 The arithmetic is one line, and `plan` prints its result: `list rate × multiplier × fee ÷
 ceiling`, the ceiling being the tightest of the plan's credits, the model's own allowance, and

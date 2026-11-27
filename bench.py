@@ -73,6 +73,11 @@ AUDIT = {
     "opencode": {
         "models": "https://opencode.ai/inference/go/v1/models",
     },
+    # Command Code publishes a roster and nothing else: ids, names and context, no prices.
+    # It still catches a row the plan has stopped selling, which the page cannot.
+    "command-code": {
+        "roster": "https://api.commandcode.ai/provider/v1/models",
+    },
 }
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -578,6 +583,39 @@ def feed_opencode(store: dict, provider: str, day: date) -> tuple[list[str], lis
 
 
 FEEDS = {"open-kodo": feed_open_kodo, "opencode": feed_opencode}
+
+
+def feed_command_code(store: dict, provider: str, day: date) -> tuple[list[str], list[str], str]:
+    """The roster names every model the plan sells, by id and by display name. No price."""
+    plan = store["providers"][provider]
+    entries = fetch_json(AUDIT[provider]["roster"])["data"]
+    keys = {norm(m["id"]) for m in entries} | {norm(m["id"].split("/")[-1]) for m in entries}
+    names = {norm(m["name"]) for m in entries if m.get("name")}
+    excepted = set(plan.get("feed_exceptions") or [])
+    catalogue = store["catalog"]
+
+    problems, rows = [], [r for r in plan_rows(store, day) if r["provider"] == provider]
+    for r in rows:
+        if r["model"].endswith("(peak)") or r["base"] in excepted:
+            continue
+        name = norm((catalogue.get(r["base"]) or {}).get("name", ""))
+        slug = norm(r["base"])
+        # A roster id carries its vendor (`z-ai/glm-5.3-flash`); the display name is the
+        # other half of the key, because a vendor renames its own slug without warning.
+        if (slug in keys or (name and name in names)
+                or any(k.endswith(slug) or slug.endswith(k) for k in keys)
+                or any(name and (k in name or name in k) for k in names)):
+            continue
+        problems.append(f"{r['base']}: the plan prices it, the roster does not list it")
+    notes = ["ids, names and context only: the rates and the allowances are read by hand "
+             "off commandcode.ai/docs/plans/goat"]
+    if excepted:
+        notes.append(f"{len(excepted)} rows excepted by the block: {', '.join(sorted(excepted))}")
+    return problems, notes, f"{len(rows)} rows"
+
+
+FEEDS = {"open-kodo": feed_open_kodo, "opencode": feed_opencode,
+         "command-code": feed_command_code}
 
 
 def cmd_audit(args) -> int:
