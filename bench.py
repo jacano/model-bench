@@ -54,10 +54,6 @@ GATEWAYS = {
     # plugin's forward key, so the address and the key come from that install:
     # OFM_BASE overrides the address, OFM_API_KEY carries the key.
     "ofm": (os.environ.get("OFM_BASE") or "http://127.0.0.1:18899/v1", "OFM_API_KEY"),
-    # Experiential Labs' direct endpoint (the block in the harness config names it
-    # `experiential`, and it serves an `:free` DeepSeek V4.1 Flash build).
-    "experiential": (os.environ.get("EXPLABS_BASE") or "https://api.experientiallabs.ai/v1",
-                     "EXPLABS_API_KEY"),
 }
 
 # A million tokens at the shape Real API Pricing publishes, and the shape a coding agent

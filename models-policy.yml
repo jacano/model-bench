@@ -29,5 +29,3 @@ criteria:
 admitted:
   - id: deepseek-v4.1-flash
     note: cheapest route on a cold cache, completions
-  - id: deepseek-v4.1-flash-uncensored-fast:free
-    note: fastest row on the table; uncensored DeepSeek V4.1 Flash 1017 build
