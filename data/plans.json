@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-24",
+ "updated": "2026-11-28",
  "about": "Plans a provider sells, the prices it publishes (evidence: nothing reads them), and the catalogue Command Code prices its models from. The turn (91.500 tokens) and the exchange rate are constants in bench.py, where they are commented.",
  "catalog": {
   "claude-fable-5-2": {
@@ -225,6 +225,13 @@
    "output": 0.47,
    "cache": 0.016
   },
+  "qwen4-max": {
+   "name": "Qwen 4 Max",
+   "input": 1.5,
+   "output": 4.5,
+   "cache": 0.075,
+   "cache_write": 1.875
+  },
   "deepseek-v4-1-flash": {
    "name": "DeepSeek V4.1 Flash",
    "turn": 0.001317,
@@ -283,6 +290,18 @@
    "input": 0.834,
    "output": 2.501,
    "cache": 0.042
+  },
+  "hy4": {
+   "name": "Tencent Hy4",
+   "input": 0.834,
+   "output": 2.501,
+   "cache": 0.042
+  },
+  "hy4-flash": {
+   "name": "Tencent Hy4 Flash",
+   "input": 0.07,
+   "output": 0.281,
+   "cache": 0.003
   },
   "glm-5-3-flash": {
    "name": "GLM-5.3 Flash",
@@ -399,6 +418,12 @@
    "input": 0.5,
    "output": 1.2,
    "cache": 0.1
+  },
+  "inkling-2-mini": {
+   "name": "Inkling 2 Mini",
+   "input": 0.075,
+   "output": 0.3,
+   "cache": 0.015
   },
   "qwen3-7-flash": {
    "name": "Qwen 3.7 Flash",
@@ -712,7 +737,7 @@
    "billing": "monthly",
    "fee_usd": 10.0,
    "credits_usd": 100.0,
-   "note": "every row of catalog-2026-11-10.csv; list prices are off-peak (17 h/day), weekdays 01-04 and 06-10 UTC double. The plan sells $100 of usage for $10, so a dollar of usage costs ten cents. Page 2026-11-18: the per-model table names 65 models with their monthly credits - $100 on four, $70 on four, down to $10 on one - and this block now carries that table whole, where it used to fall back to the whole $100 pool for any model it did not name. The models the table does not list (Opus 5.5, Fable 5.x) still fall back to it. A processing fee is printed on top of the $10 and the charge carried none. The same catalogue is sold at $1 for $10 of usage, also ten cents a dollar: at a thousand requests a month the cheap tier is enough and costs a tenth. Cross-checked 2026-11-22 against real-api-pricing: its GOAT points cap every model at a $70 shared pool where this block uses the page's $100, so its prices for the shared-pool models read about 43% dearer; nothing moved here on that account.",
+   "note": "every row of catalog-2026-11-10.csv; list prices are off-peak (17 h/day), weekdays 01-04 and 06-10 UTC double. The plan sells $100 of usage for $10, so a dollar of usage costs ten cents. Page 2026-11-18: the per-model table names 65 models with their monthly credits - $100 on four, $70 on four, down to $10 on one - and this block now carries that table whole, where it used to fall back to the whole $100 pool for any model it did not name. The models the table does not list (Opus 5.5, Fable 5.x) still fall back to it. A processing fee is printed on top of the $10 and the charge carried none. The same catalogue is sold at $1 for $10 of usage, also ten cents a dollar: at a thousand requests a month the cheap tier is enough and costs a tenth. Cross-checked 2026-11-22 against real-api-pricing: its GOAT points cap every model at a $70 shared pool where this block uses the page's $100, so its prices for the shared-pool models read about 43% dearer; nothing moved here on that account. Page 2026-11-28: the GOAT table names 76 models and the block now prices 74 of them. Inkling 2 Mini joins at $15; the older eight the page lists at the standard $20 (Kimi K2.5, Kimi K2.6, GLM-5, GLM-5.1, Qwen 3.6 Max Preview, Qwen 3.7 Flash, MiniMax M2.5, MiniMax M2.7) were in neither the catalogue nor the block and are now in both; and four names the block already carried - Tencent Hy4, Tencent Hy4 Flash, Qwen 4 Max, Inkling 2 Mini - were priced nowhere, because a model's row is its catalogue row, so the catalogue gained those four. The headline allowances did not move: $100 on DeepSeek V4.1 Flash, GLM-5.3 Flash and both Ling rows, $70 on GLM-5.2, GLM-5.3, Tencent Hy3 and Qwen 3.8 27B, $60 on DeepSeek V4 Flash and its Fast lane and Kimi K2.7 Code, $50 on LongCat 2.0, $47 on MiniMax M3, $40 on Gemini 3.8 Flash, $33 on the Qwen 3.6 Plus and 3.7 rows, $20 on the standard two-thirds, $15 on Qwen 4 Max, Tencent Hy4 Flash and Inkling 2 Mini, $10 on Claude Sonnet 5.5 and MiMo V2.6 Pro UltraSpeed, and Haiku 5.5's $20. The windows are the same $20 / $50 / $100, and the tiers around GOAT (Go $1, Pro $20, Max $100 and $200, Teams $40, MOAT credits at $10 a month) are recorded, not priced.",
    "models": "catalog",
    "credits_row": [
     10,
@@ -737,6 +762,8 @@
     "DeepSeek V4.1 Flash Ultrafast": 20.0,
     "Gemini 3.7 Flash": 40.0,
     "Gemini 3.8 Flash": 40.0,
+    "GLM-5": 20.0,
+    "GLM-5.1": 20.0,
     "GLM-5.2": 70.0,
     "GLM-5.2 Fast": 20.0,
     "GLM-5.3": 70.0,
@@ -749,9 +776,12 @@
     "Grok 4.6": 20.0,
     "Grok 4.7": 20.0,
     "Inkling": 20.0,
+    "Inkling 2 Mini": 15.0,
     "Inkling Small": 20.0,
     "Jev": 20.0,
     "Jev 1.14.0": 20.0,
+    "Kimi K2.5": 20.0,
+    "Kimi K2.6": 20.0,
     "Kimi K2.7 Code": 60.0,
     "Kimi K2.7 Code HighSpeed": 20.0,
     "Kimi K3": 20.0,
@@ -762,6 +792,8 @@
     "MiMo V2.6 Flash": 20.0,
     "MiMo V2.6 Pro": 20.0,
     "MiMo V2.6 Pro UltraSpeed": 10.0,
+    "MiniMax M2.5": 20.0,
+    "MiniMax M2.7": 20.0,
     "MiniMax M3": 47.0,
     "MiniMax M3.1 Flash": 20.0,
     "Mistral Large 4": 20.0,
@@ -774,7 +806,9 @@
     "Nemotron 3 Ultra": 20.0,
     "Nemotron 3.5 Super VL": 20.0,
     "Ornith 1.5 122B": 20.0,
+    "Qwen 3.6 Max Preview": 20.0,
     "Qwen 3.6 Plus": 33.0,
+    "Qwen 3.7 Flash": 20.0,
     "Qwen 3.7 Max": 33.0,
     "Qwen 3.7 Plus": 33.0,
     "Qwen 3.8 27B": 70.0,
@@ -816,7 +850,7 @@
     "week_usd": 15.0,
     "five_hours_usd": 5.0
    },
-   "note": "credit multiplier per model, applied to the price OpenDesign publishes; $10 buys $60 of base Coding Plan credits, so a dollar costs 16.7 cents. The card's $220 / $55 / $18 are the 0.27x (Eco) equivalents of the $60 / $15 / $5 base (60/0.27=222->220, 15/0.27=55.6->55, 5/0.27=18.5->18), not further credits; corrected 2026-11-24 from the maintainer's review of real-api-pricing#257. Go has a 7-day and a 5-hour window. Page 2026-11-18: three more tiers above Go (Plus $20 for 310, Pro $100 for 780, Max $200 for 1,410, with 20, 120 and 300 of Top Model credits and only a 7-day window), MiMo V2.6 Flash and Pro now cost 4x where they cost 1x, and DeepSeek V4.1 Flash carries a 0.25x off-peak promo dated 2026-10-20 18:00 to 2026-10-27 18:00 (UTC+8), now a stale row. The page's Coding Plan table names eleven models and carries no Claude, GPT or GLM-5.3 FlashX row; those three were the console's, not the plan's, and left the block on 2026-11-22: Haiku because the console bills it at x2 against the $1 pay-as-you-go credit beside the plan, GPT-6 Luna and GLM-5.3 FlashX because Go prices neither and has no Top Model credits to draw them from. The block now holds exactly the plan's eleven. Console catalogue 2026-11-18: all fourteen base rates the block carried then matched it, and it prints no cached-write rate on twelve of them, where this block charges input for the same reason. Black Friday 2026 (2026-11-21 18:00 to 2026-12-05 00:00 UTC+8, from the campaign countdown): new subscriptions bought during the campaign get unlimited DeepSeek V4.1 Flash and V4.1 Flash Eco, which then consume no Model Credits; plans bought before the campaign do not, and this one was bought 2026-11-16. Re-checked 2026-11-23: the Cloud model catalogue reprints the same eleven rates (0.30/1.20/0.006 on DeepSeek V4.1 Flash, 0.075/0.25/0.015 on GLM-5.3 Flash, and so on), and the console's Plan & balance shows only the 5-hour and 7-day windows plus a pay-as-you-go balance - no per-model counter. The page's \"Monthly usage\" column is a 60-credit equivalent, in the vendor's own words a \"model-specific usage equivalent, not an increase in the shared plan credits\": the allowance is one shared $220 pool, and the per-model figures are that pool converted at each multiplier, not caps.",
+   "note": "credit multiplier per model, applied to the price OpenDesign publishes; $10 buys $60 of base Coding Plan credits, so a dollar costs 16.7 cents. The card's $220 / $55 / $18 are the 0.27x (Eco) equivalents of the $60 / $15 / $5 base (60/0.27=222->220, 15/0.27=55.6->55, 5/0.27=18.5->18), not further credits; corrected 2026-11-24 from the maintainer's review of real-api-pricing#257. Go has a 7-day and a 5-hour window. Page 2026-11-18: three more tiers above Go (Plus $20 for 310, Pro $100 for 780, Max $200 for 1,410, with 20, 120 and 300 of Top Model credits and only a 7-day window), MiMo V2.6 Flash and Pro now cost 4x where they cost 1x, and DeepSeek V4.1 Flash carries a 0.25x off-peak promo dated 2026-10-20 18:00 to 2026-10-27 18:00 (UTC+8), now a stale row. The page's Coding Plan table names eleven models and carries no Claude, GPT or GLM-5.3 FlashX row; those three were the console's, not the plan's, and left the block on 2026-11-22: Haiku because the console bills it at x2 against the $1 pay-as-you-go credit beside the plan, GPT-6 Luna and GLM-5.3 FlashX because Go prices neither and has no Top Model credits to draw them from. The block now holds exactly the plan's eleven. Console catalogue 2026-11-18: all fourteen base rates the block carried then matched it, and it prints no cached-write rate on twelve of them, where this block charges input for the same reason. Black Friday 2026 (2026-11-21 18:00 to 2026-12-05 00:00 UTC+8, from the campaign countdown): new subscriptions bought during the campaign get unlimited DeepSeek V4.1 Flash and V4.1 Flash Eco, which then consume no Model Credits; plans bought before the campaign do not, and this one was bought 2026-11-16. Re-checked 2026-11-23: the Cloud model catalogue reprints the same eleven rates (0.30/1.20/0.006 on DeepSeek V4.1 Flash, 0.075/0.25/0.015 on GLM-5.3 Flash, and so on), and the console's Plan & balance shows only the 5-hour and 7-day windows plus a pay-as-you-go balance - no per-model counter. The page's \"Monthly usage\" column is a 60-credit equivalent, in the vendor's own words a \"model-specific usage equivalent, not an increase in the shared plan credits\": the allowance is one shared $220 pool, and the per-model figures are that pool converted at each multiplier, not caps. Page 2026-11-28: the Coding Plan list is thirteen again and Claude Haiku 5.5 and GPT-6 Luna are both on it at 4x - the two rows that left on 2026-11-22 are back, at the $15 a month the page gives them on Go - so the block carries thirteen. The pool maths did not move and the page now shows it row by row: its Coding Plan usage table gives DeepSeek V4.1 Flash Eco $220 a month (0,27x of $60), DeepSeek V4.1 Flash $120 (0,5x), the 1x rows $60 and the 4x rows $15, so the $220 on the card is still the Eco-equivalent face value and $60 is still the credit pool. The plan now serves the 1017 build of DeepSeek V4.1 Flash and advertises an all-day off-peak week for it; the row keeps the 0,30 / 1,20 the console billed on 2026-11-16, the peak half of that build's official schedule, because nothing since bills the other half. Plus, Pro and Max keep $310 / $780 / $1.410 with $20 / $120 / $300 of Top Model credits and only a 7-day window, and every Top Model stays off Go.",
    "models": [
     {
      "id": "deepseek-v4.1-flash",
@@ -908,6 +942,24 @@
      "cache": 0.014,
      "output": 1.32,
      "cache_write": 0.44
+    },
+    {
+     "id": "claude-haiku-5-5",
+     "factor": 4.0,
+     "input": 0.1,
+     "cache": 0.01,
+     "output": 0.5,
+     "cache_write": 0.125,
+     "multiplier_note": "page 2026-11-28: Haiku 5.5 is back in the Coding Plan's thirteen, at 4x - the console's $15 a month for Go, where the page prices it - and it is the reason it left on 2026-11-22."
+    },
+    {
+     "id": "gpt-6-luna",
+     "factor": 4.0,
+     "input": 0.1,
+     "cache": 0.01,
+     "output": 0.5,
+     "cache_write": 0.125,
+     "multiplier_note": "page 2026-11-28: GPT-6 Luna is back in the Coding Plan's thirteen at 4x, $15 of usage a month on Go."
     }
    ],
    "promos": [
@@ -927,6 +979,277 @@
    },
    "label": "OpenDesign Go"
   },
+  "open-kodo": {
+   "plan": "Go",
+   "label": "OpenKodo Go",
+   "billing": "monthly",
+   "fee_usd": 9.9,
+   "credits_usd": 100.0,
+   "windows": {
+    "five_hours_usd": 25.0,
+    "week_usd": 50.0
+   },
+   "note": "Go, $9.9 a month or $99 a year (two months off): 'up to $100' of included usage at list rates, $25 of it in any 5 hours and $50 in any 7 days, 1 credit = $1, spent from the plan first and then from a wallet bought 1:1 that the 5-hour cap does not stop. The plan's table (pricing page, read 2026-11-27) prices 17 models with a monthly cap each - $100 on DeepSeek V4.1 Flash 1017 and GLM-5.3, $66 on GLM-5.2, GLM-5.3 Flash, Kimi K2.7 Code, Qwen3.7 Plus and MiniMax M3, $33 on Qwen3.8 Flash, $22 on MiniMax M3.1 Flash, $17 on the other eight - and the billing page gives 'the remaining models' $17, so every row here carries min($100, cap): the fee over it prices a million input tokens of DeepSeek V4.1 Flash at 0.0149 and a million of Claude Opus 5.5 at 2.33. The site says three times that Go carries the whole catalog (the plans table's 'All models', the FAQ, the home page's 'every model in the catalog'), and the tab called 'Included models' lists the 17 because those are the rows it compares with OpenCode Go, not the plan's list - so the block carries the 36 chat models whose cache read is also on file, at $17 where the plan names no cap. Four rows stay out, because a cache read that nobody prints is not invented: GPT-6.2 Sol and Astra have no catalogue row at all while its GPT cache reads split between 5% and 10% of input, so a made-up one would move the point by half; GPT-5.6 Sol prints 4 / 20 on its card where the catalogue's row is 5 / 30, with no ratio that gives its cache read; and DeepSeek V4.1 Flash Eco is not in the catalogue at all, so alone among the DeepSeek rows it could draw only one point for a model that has a peak schedule too (the card prints peak 0.24 / 0.96). The compare page says cache read and cache write are metered separately, but the catalogue prints input and output only: cache read is the vendor list that catalogue holds, scaled only where the plan's own rates are an exact multiple (MiniMax M3 is the catalogue's -50% row doubled, the same 0.6 / 2.4 the card prints; MiniMax M2.7 Highspeed is M2.7 doubled; Claude Opus 4.6 is the 5 / 25 of 4.7 and 4.8), and Hy4 keeps the catalogue's 2.501 where the card rounds to 2.5. No cache-write rate is carried: no price here uses one. DeepSeek prices off-peak and peak on weekdays 01-04 and 06-10 UTC, so its two rows draw two points, as they do on Command Code and OpenCode. Unmeasured: no row in models.csv and nothing admitted, so the chart carries these points with no gate behind them. The site's own pages also disagree on the request estimate it advertises for DeepSeek V4.1 Flash (56,400 per 5 hours on /pricing, 47,600 on /compare/opencode), which touches no dollar figure here.",
+   "models": [
+    {
+     "id": "deepseek-v4.1-flash-1017",
+     "catalog": "deepseek-v4-1-flash"
+    },
+    {
+     "id": "deepseek-v4-pro-0813",
+     "catalog": "deepseek-v4-pro"
+    },
+    {
+     "id": "glm-5.3",
+     "input": 1.4,
+     "cache": 0.26,
+     "output": 4.4
+    },
+    {
+     "id": "kimi-k3.1-pro",
+     "input": 2.0,
+     "cache": 0.2,
+     "output": 10.0
+    },
+    {
+     "id": "qwen3.8-max",
+     "input": 2.0,
+     "cache": 0.25,
+     "output": 6.0
+    },
+    {
+     "id": "MiniMax-M3",
+     "input": 0.6,
+     "cache": 0.12,
+     "output": 2.4
+    },
+    {
+     "id": "glm-5.3-flash",
+     "input": 0.15,
+     "cache": 0.03,
+     "output": 0.5
+    },
+    {
+     "id": "glm-5.2",
+     "input": 1.4,
+     "cache": 0.26,
+     "output": 4.4
+    },
+    {
+     "id": "kimi-k3",
+     "input": 3.0,
+     "cache": 0.3,
+     "output": 15.0
+    },
+    {
+     "id": "kimi-k2.7-code",
+     "input": 0.95,
+     "cache": 0.19,
+     "output": 4.0
+    },
+    {
+     "id": "qwen3.7-max",
+     "input": 2.5,
+     "cache": 0.5,
+     "output": 7.5
+    },
+    {
+     "id": "qwen3.7-plus",
+     "input": 0.4,
+     "cache": 0.08,
+     "output": 1.6
+    },
+    {
+     "id": "qwen3.6-plus",
+     "input": 0.5,
+     "cache": 0.1,
+     "output": 3.0
+    },
+    {
+     "id": "qwen3.8-flash",
+     "input": 0.16,
+     "cache": 0.016,
+     "output": 0.47
+    },
+    {
+     "id": "MiniMax-M2.7",
+     "input": 0.3,
+     "cache": 0.06,
+     "output": 1.2
+    },
+    {
+     "id": "MiniMax-M2.7-highspeed",
+     "input": 0.6,
+     "cache": 0.12,
+     "output": 2.4
+    },
+    {
+     "id": "MiniMax-M3.1-Flash",
+     "input": 0.15,
+     "cache": 0.015,
+     "output": 0.6
+    },
+    {
+     "id": "claude-fable-5-1",
+     "input": 10.0,
+     "cache": 0.25,
+     "output": 50.0
+    },
+    {
+     "id": "claude-fable-5-2",
+     "input": 8.0,
+     "cache": 0.2,
+     "output": 40.0
+    },
+    {
+     "id": "claude-haiku-4-5-20251001",
+     "input": 1.0,
+     "cache": 0.1,
+     "output": 5.0
+    },
+    {
+     "id": "claude-haiku-5-5",
+     "input": 0.1,
+     "cache": 0.01,
+     "output": 0.5
+    },
+    {
+     "id": "claude-opus-4-6",
+     "input": 5.0,
+     "cache": 0.5,
+     "output": 25.0
+    },
+    {
+     "id": "claude-opus-4-7",
+     "input": 5.0,
+     "cache": 0.5,
+     "output": 25.0
+    },
+    {
+     "id": "claude-opus-4-8",
+     "input": 5.0,
+     "cache": 0.5,
+     "output": 25.0
+    },
+    {
+     "id": "claude-opus-5",
+     "input": 5.0,
+     "cache": 0.5,
+     "output": 25.0
+    },
+    {
+     "id": "claude-opus-5-5",
+     "input": 4.0,
+     "cache": 0.2,
+     "output": 20.0
+    },
+    {
+     "id": "claude-sonnet-4-6",
+     "input": 3.0,
+     "cache": 0.3,
+     "output": 15.0
+    },
+    {
+     "id": "claude-sonnet-5",
+     "input": 2.0,
+     "cache": 0.2,
+     "output": 10.0
+    },
+    {
+     "id": "claude-sonnet-5-5",
+     "input": 2.0,
+     "cache": 0.1,
+     "output": 10.0
+    },
+    {
+     "id": "gpt-5.6-terra",
+     "input": 2.0,
+     "cache": 0.2,
+     "output": 12.0
+    },
+    {
+     "id": "gpt-6.1-sol",
+     "input": 2.0,
+     "cache": 0.1,
+     "output": 10.0
+    },
+    {
+     "id": "gpt-6.1-terra",
+     "input": 1.0,
+     "cache": 0.05,
+     "output": 5.0
+    },
+    {
+     "id": "gpt-6-astra",
+     "input": 10.0,
+     "cache": 1.0,
+     "output": 50.0
+    },
+    {
+     "id": "gpt-6-sol",
+     "input": 2.0,
+     "cache": 0.2,
+     "output": 10.0
+    },
+    {
+     "id": "glm-5.3-flashx",
+     "input": 0.37,
+     "cache": 0.075,
+     "output": 1.25
+    },
+    {
+     "id": "hy4",
+     "input": 0.834,
+     "cache": 0.042,
+     "output": 2.501
+    }
+   ],
+   "allowances_usd": {
+    "Claude Fable 5.1": 17.0,
+    "Claude Fable 5.2": 17.0,
+    "Claude Haiku 4.5": 17.0,
+    "Claude Haiku 5.5": 17.0,
+    "Claude Opus 4.6": 17.0,
+    "Claude Opus 4.7": 17.0,
+    "Claude Opus 4.8": 17.0,
+    "Claude Opus 5": 17.0,
+    "Claude Opus 5.5": 17.0,
+    "Claude Sonnet 4.6": 17.0,
+    "Claude Sonnet 5": 17.0,
+    "Claude Sonnet 5.5": 17.0,
+    "DeepSeek V4 Pro": 17.0,
+    "DeepSeek V4.1 Flash": 100.0,
+    "GLM-5.2": 66.0,
+    "GLM-5.3": 100.0,
+    "GLM-5.3 Flash": 66.0,
+    "GLM-5.3 FlashX": 17.0,
+    "GPT-5.6 Terra": 17.0,
+    "GPT-6 Astra": 17.0,
+    "GPT-6 Sol": 17.0,
+    "GPT-6.1 Sol": 17.0,
+    "GPT-6.1 Terra": 17.0,
+    "Hy4": 17.0,
+    "Kimi K2.7 Code": 66.0,
+    "Kimi K3": 17.0,
+    "Kimi K3.1 Pro": 17.0,
+    "MiniMax M2.7": 17.0,
+    "MiniMax M2.7 Highspeed": 17.0,
+    "MiniMax M3": 66.0,
+    "MiniMax M3.1 Flash": 22.0,
+    "Qwen 3.6 Plus": 17.0,
+    "Qwen 3.7 Max": 17.0,
+    "Qwen 3.7 Plus": 66.0,
+    "Qwen 3.8 Flash": 33.0,
+    "Qwen 3.8 Max": 17.0
+   },
+   "sources": {
+    "pricing": "https://openkodo.dev/pricing",
+    "models": "https://openkodo.dev/models",
+    "billing": "https://openkodo.dev/docs/billing",
+    "compare": "https://openkodo.dev/compare/opencode"
+   },
+   "billing_seen": "no subscription taken and no console read: nothing was charged, so this block is the pages' own numbers, read 2026-11-27"
+  },
   "opencode": {
    "plan": "Go",
    "billing": "monthly",
@@ -936,7 +1259,7 @@
     "week_pct": 50,
     "five_hours_pct": 20
    },
-   "note": "OpenCode Go, $10 a month: one allowance per model instead of one pool; the month resets with the paid period, the 5-hour cap is 20% of a model's monthly allowance, the week 50%, and Extra Usage spends the console balance at the Models prices. The rates are the Go endpoint's own, as its models endpoint reported them on 2026-11-22: DeepSeek V4.1 Flash 0.15/0.003/0.6 and V4 Pro 0.66/0.022/1.98, both x2 on weekdays 01-04 and 06-10 UTC (two points, like Command Code's), and the rest as listed. Black Friday's 60% off is on the Models product (GLM-5.3 1.40 -> 0.56, DeepSeek V4.1 Flash 0.30 -> 0.12), not on the Go allowance rates, so it is not in this block. GLM-5.3's $500 is the raised limit good through 2026-11-22 (standard $200 per real-api-pricing, Go Plus $1,000); GLM-5.2 is no longer in the Go endpoint but keeps its hidden console row at $60. Gemini 4 Argon's 50% discount runs through 2026-11-30 and the endpoint doubles it from 2026-12-01. Cache write is the published rate where the plan prints one, and the input rate where it prints '-' (a write is then billed as input); the same rule is in the OpenDesign block. Context-length overrides above the base tier (Grok 4.7 >200k, MiniMax M3 >512k, Haiku 5.5 >100k, Qwen3.7 Plus >256k, the Lunas >272k) are not modelled, and on 2026-11-24 the rows carrying them left the block (six of the seven ids; the decision variant was never carried here): a model whose price changes with context has no single price to compare, so it does not belong in a one-price table. Qwen4 Max and Hy4 are priced from the OpenDesign console catalogue of 2026-11-18; the free models stay out.",
+   "note": "OpenCode Go, $10 a month: one allowance per model instead of one pool; the month resets with the paid period, the 5-hour cap is 20% of a model's monthly allowance, the week 50%, and Extra Usage spends the console balance at the Models prices. The rates are the Go endpoint's own, as its models endpoint reported them on 2026-11-22: DeepSeek V4.1 Flash 0.15/0.003/0.6 and V4 Pro 0.66/0.022/1.98, both x2 on weekdays 01-04 and 06-10 UTC (two points, like Command Code's), and the rest as listed. Black Friday's 60% off is on the Models product (GLM-5.3 1.40 -> 0.56, DeepSeek V4.1 Flash 0.30 -> 0.12), not on the Go allowance rates, so it is not in this block. GLM-5.3's $500 is the raised limit good through 2026-11-22 (standard $200 per real-api-pricing, Go Plus $1,000); GLM-5.2 is no longer in the Go endpoint but keeps its hidden console row at $60. Gemini 4 Argon's 50% discount runs through 2026-11-30 and the endpoint doubles it from 2026-12-01. Cache write is the published rate where the plan prints one, and the input rate where it prints '-' (a write is then billed as input); the same rule is in the OpenDesign block. Context-length overrides above the base tier (Grok 4.7 >200k, MiniMax M3 >512k, Haiku 5.5 >100k, Qwen3.7 Plus >256k, the Lunas >272k) are not modelled, and on 2026-11-24 the rows carrying them left the block (six of the seven ids; the decision variant was never carried here): a model whose price changes with context has no single price to compare, so it does not belong in a one-price table. Qwen4 Max and Hy4 are priced from the OpenDesign console catalogue of 2026-11-18; the free models stay out. Endpoint 2026-11-28: Kimi K3.1 Pro's allowance quadrupled from $15 to $60 for the same $10, so its blended million falls from 0,196 to 0,049 and it is the cheapest row above Terminal-Bench 57 on the chart; longcat-2.0 became longcat-2.5 at the same rates and the same $60, and its cache write is the 0 the endpoint prints, not the input rate; GLM-5.3's Go Plus allowance is $400 where this note said $1.000. The roster is 32 chat models, and every new one prices more past a context threshold - grok-4.7 (>200k, x2), gpt-5.6-luna and gpt-6-luna (>272k, input x2 / output x1,5), claude-haiku-5-5 (>100k, x5), minimax-m3 (>512k, x2), qwen3.7-plus (>256k, x3) - so the 2026-11-24 rule keeps all six out, as it kept their predecessors out; the free rows (beam-free, iceman-contributor-free, hy4-flash-free, hungerg-free), the decision models and the embeddings were never in. Go Plus ($40) and Go Teams ($20 a member, two minimum) are recorded, not priced: this block is Go.",
    "models": [
     {
      "id": "kimi-k3",
@@ -948,12 +1271,13 @@
     },
     {
      "id": "kimi-k3.1-pro",
-     "monthly_limit_usd": 15,
+     "monthly_limit_usd": 60,
      "input": 2.0,
      "cache": 0.2,
      "output": 10.0,
      "rate_source": "catalogue",
-     "cache_write": 2.0
+     "cache_write": 2.0,
+     "note": "2026-11-28: the Go models endpoint raised the allowance from $15 to $60, four times the usage for the same $10; the rate is unchanged."
     },
     {
      "id": "qwen3.8-max",
@@ -1064,13 +1388,14 @@
      "note": "2026-11-24: the $500 promo ran through 2026-11-22 and the Go models endpoint now returns 200, the standard limit, so the row is back on it."
     },
     {
-     "id": "longcat-2.0",
+     "id": "longcat-2.5",
      "monthly_limit_usd": 60,
      "input": 0.3,
      "cache": 0.006,
      "output": 1.2,
      "rate_source": "catalogue",
-     "cache_write": 0.3
+     "cache_write": 0.0,
+     "note": "2026-11-28: the endpoint renamed longcat-2.0 to longcat-2.5, same rates and the same $60; it is now the only LongCat row there."
     },
     {
      "id": "mimo-v2.6-flash",

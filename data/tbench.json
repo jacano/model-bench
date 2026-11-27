@@ -233,6 +233,12 @@
    "cost_usd": 184.89,
    "tokens": 8187123046
   },
+  "deepseekv41flashuncensoredfast": {
+   "label": "DeepSeek V4.1 Flash 1017 Uncensored",
+   "score": 38.48,
+   "inherited_from": "deepseekv41flash1017",
+   "note": "the board does not rank this variant; the score is the build it is made from (1017), carried unchanged so the floor can be applied to it"
+  },
   "hy4": {
    "label": "Hy4",
    "score": 37.88,

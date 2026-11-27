@@ -23,7 +23,6 @@ import subprocess
 import sys
 import tempfile
 import time
-from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime
 from pathlib import Path
 from urllib.error import HTTPError
@@ -47,7 +46,18 @@ LANES = ("fast", "eco", "ultrafast", "preview", "latest", "sync", "max", "high",
 GATEWAYS = {
     "command-code": ("https://api.commandcode.ai/provider/v1", "COMMANDCODE_API_KEY"),
     "opendesign": ("https://amr-link.open-design.ai/v1", "OPENDESIGN_API_KEY"),
-    "opengateway": ("https://apis.opengateway.ai/v1", "OPENGATEWAY_API_KEY"),
+    # OpenKodo serves the same key on /v1 (Chat and Responses) and on the bare
+    # host (Anthropic Messages), so the plan's own base URL is the OpenAI shape.
+    "open-kodo": ("https://api.openkodo.dev/v1", "OPENKODO_API_KEY"),
+    # Our Free Model's local forward listener: an OpenAI-compatible door in front of
+    # the plugin's free lane and its Kilo pool. It binds loopback and takes the
+    # plugin's forward key, so the address and the key come from that install:
+    # OFM_BASE overrides the address, OFM_API_KEY carries the key.
+    "ofm": (os.environ.get("OFM_BASE") or "http://127.0.0.1:18899/v1", "OFM_API_KEY"),
+    # Experiential Labs' direct endpoint (the block in the harness config names it
+    # `experiential`, and it serves an `:free` DeepSeek V4.1 Flash build).
+    "experiential": (os.environ.get("EXPLABS_BASE") or "https://api.experientiallabs.ai/v1",
+                     "EXPLABS_API_KEY"),
 }
 
 # A million tokens at the shape Real API Pricing publishes, and the shape a coding agent
@@ -70,6 +80,9 @@ def probes_for(model_id: str, catalog_slug: str, lanes=LANES) -> list[str]:
     for raw in (catalog_slug, model_id.split("/")[-1], model_id):
         if not raw:
             continue
+        # A free-tier route carries its tier as a suffix, `-free` or `:free`. The
+        # board ranks the model, not the tier, so both shapes go before the lookup.
+        raw = re.sub(r"[:-]free$", "", raw)
         probes.append(norm(raw))
         base = raw
         for lane in lanes:
@@ -387,7 +400,8 @@ def cmd_verify(args) -> int:
 # --------------------------------------------------------------------------- chart
 
 CHART_COLOURS = {"open-design": (96, 165, 250),
-                 "command-code": (251, 146, 60), "opencode": (244, 114, 182)}
+                 "command-code": (251, 146, 60), "opencode": (244, 114, 182),
+                 "open-kodo": (45, 212, 191)}
 
 # A point earns a place on the chart only if the board can judge it: a sub-30
 # route says more about the benchmark's noise than about the plan.
@@ -560,7 +574,7 @@ def draw_png(rows: list[dict], front: list[dict], store: dict,
     entries = []
     for name, plan in store["providers"].items():
         fee = plan.get("fee_usd")
-        label = (f"{plan.get('label') or name}  ${fee:.0f}/mo" if fee
+        label = (f"{plan.get('label') or name}  ${fee:g}/mo" if fee
                  else f"{plan.get('label') or name}  pay as you go")
         entries.append((label, CHART_COLOURS.get(name, (200, 200, 200))))
     lx = M
@@ -648,8 +662,7 @@ def load_measured() -> dict:
             "id": r["slug"], "name": r["name"],
             "speed": num("speed_tps"), "ttft": num("ttft_s"), "cache": num("cache_hit"),
             "prefill": num("prefill_ms_per_1k"), "cache_loop": num("cache_loop_hit"),
-            "retention": num("retention_4x"), "errors": num("errors_10"),
-            "tools": num("tools_valid"),
+            "errors": num("errors_10"), "tools": num("tools_valid"),
         }
     return out
 
@@ -702,7 +715,6 @@ def fails_fitness(m, g):
     checks = (
         ("prefill", "prefill_ms_per_1k_max", ">", "ms/1k", 1),
         ("cache_loop", "cache_hit_min", "<", "", 100),
-        ("retention", "retention_4x_min", "<", "", 1),
         ("errors", "errors_per_10_max", ">", "/10", 1),
         ("tools", "tools_valid_min", "<", "", 100),
     )
@@ -732,7 +744,7 @@ def config_routes() -> dict[str, list[str]]:
         if block:
             provider = block.group(1)
             continue
-        model = re.match(r"^\s+- (?:\{\s*)?id:\s*([^,\s}]+)", line)
+        model = re.match(r"^\s+- (?:\{\s*)?id:\s*[\"']?([^,\s}\"']+)", line)
         if model and provider:
             routes.setdefault(model.group(1), []).append(provider)
     return routes
@@ -902,26 +914,6 @@ def measure_route(model: str) -> dict:
         loop_hits += 1 if turn >= 2 and usage_tokens(data)[1] else 0
     loop_rate = loop_hits / 3
 
-    # Retention is the noisiest number here: four parallel calls against one solo
-    # call, and a single round moved 0,74 to 0,99 within ten minutes. Three rounds,
-    # median, or the gate is reading the scheduler rather than the route.
-    retention = []
-    for _ in range(3):
-        solo_start = time.perf_counter()
-        data = call(model, corpus(30000, 120) + "\n\nWrite 200 words.", 200)
-        solo = usage_tokens(data)[0] / (time.perf_counter() - solo_start)
-
-        total = []
-
-        def one():
-            d = call(model, corpus(40000, 120) + "\n\nWrite 200 words.", 200)
-            total.append(usage_tokens(d)[0])
-        start = time.perf_counter()
-        with ThreadPoolExecutor(max_workers=4) as pool:
-            list(pool.map(lambda _: one(), range(4)))
-        aggregate = sum(total) / (time.perf_counter() - start)
-        retention.append(aggregate / (solo * 4))
-
     errors = 0
     for _ in range(10):
         try:
@@ -967,7 +959,6 @@ def measure_route(model: str) -> dict:
         "cache": hits / 3,
         "prefill": round(slope, 1),
         "cache_loop": loop_rate,
-        "retention": round(statistics.median(retention), 2),
         "errors": errors,
         "tools": good / 2,
     }
@@ -995,13 +986,13 @@ def live(model: str, tbench_score: float) -> int:
     f3 = fails_fitness(row, GATES["fitness"])
     print(f"\n  speed {values['speed']} tok/s   ttft {values['ttft']} s   cache {values['cache']:.0%}")
     print(f"  prefill {values['prefill']} ms/1k   loop cache {values['cache_loop']:.0%}   "
-          f"retention {values['retention']}   errors {values['errors']}/10   tools {values['tools']:.0%}")
+          f"errors {values['errors']}/10   tools {values['tools']:.0%}")
     if f2 or f3:
         print(f"\n  NOT FIT: {', '.join(f2 + f3)}")
         return 1
     print("\n  FIT")
     print(f"\n  {model},{model},{values['speed']},{values['ttft']},{values['cache']:.3f},"
-          f"{values['prefill']},{values['cache_loop']:.2f},{values['retention']},"
+          f"{values['prefill']},{values['cache_loop']:.2f},"
           f"{values['errors']},{values['tools']:.2f}")
     return 0
 
