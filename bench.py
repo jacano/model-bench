@@ -266,21 +266,31 @@ def plan_rows(store: dict, day: date, want: str | None = None) -> list[dict]:
                 continue
             monthly = m.get("monthly_limit_usd")
             monthly = monthly if isinstance(monthly, (int, float)) else plan.get("credits_usd")
-            usable, bound = plan_caps(plan, monthly, row.get("name") or m["id"])
+            # An entry may name itself, so a block that carries its own rates does not
+            # depend on what the shared catalogue happens to call the model.
+            usable, bound = plan_caps(plan, monthly,
+                                      m.get("name") or row.get("name") or m["id"])
             fee = plan.get("fee_usd")
             scale = (float(fee) / usable) if usable and fee else 1.0
             offer = live_promo(plan, m["id"], day)
             base = float(m.get("billed_factor") or m.get("factor", 1.0)) * (offer or 1.0) * scale
             # A model with a peak bracket gets two points, off-peak and peak, so the range
-            # is visible instead of averaged into a number that is neither.
-            hours, mult = row.get("peak_hours_per_day"), row.get("peak_multiplier")
+            # is visible instead of averaged into a number that is neither. The entry may
+            # carry the bracket itself; a catalogue row's applies only to an entry that
+            # brings no rates of its own, which is the shape that used to mean "priced
+            # from the catalogue".
+            hours, mult = m.get("peak_hours_per_day"), m.get("peak_multiplier")
             shapes = [("", 1.0)]
-            if hours and mult and "input" not in m:
+            if hours and mult:
                 shapes = [(" (off-peak)", 1.0), (" (peak)", float(mult))]
+            elif "input" not in m:
+                hours, mult = row.get("peak_hours_per_day"), row.get("peak_multiplier")
+                if hours and mult:
+                    shapes = [(" (off-peak)", 1.0), (" (peak)", float(mult))]
             for suffix, hourly in shapes:
                 factor = base * hourly
                 out.append({"provider": provider, "model": m["id"] + suffix, "base": m["id"],
-                            "caps at": bound,
+                            "caps at": bound, "ceiling": usable,
                             "list": {k: float(rates[k]) for k in
                                      ("input", "cache", "output", "cache_write")
                                      if rates.get(k) is not None},
@@ -457,7 +467,7 @@ def write_page(rows: list[dict], store: dict, subject: str,
             "model": r["model"], "provider": r["provider"],
             "plan": plan["plan"], "fee": plan.get("fee_usd"),
             "tb": round(r["tb"], 2), "state": r.get("state", "unmeasured"),
-            "cost": round(r["cost"], 6),
+            "cost": round(r["cost"], 6), "cap": r.get("ceiling"),
             "eff": {k: round(v, 6) for k, v in r.items()
                     if k in ("input", "cache", "cache_write", "output")},
             "list": {k: round(v, 6) for k, v in r["list"].items()},

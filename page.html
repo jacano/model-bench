@@ -268,6 +268,7 @@ function showTip(r, e) {
   const rows = [
     ["Terminal-Bench", r.tb.toFixed(1)],
     ["blended", money(costOf(r))],
+    ["ceiling", r.cap == null ? "—" : "$" + (Math.round(r.cap * 100) / 100) + " a month"],
     ["list input", rate(r.list && r.list.input)],
     ["input",  rate(r.eff.input)],
     ["cache read",  rate(r.eff.cache)],
