@@ -329,10 +329,20 @@ def explain(r: dict, store: dict) -> None:
     if r["model"].endswith("(peak)"):
         factor = r["input"] / r["list"]["input"] / scale if scale else 0.0
         print(f"    peak       the list rate x{factor:g}, on the peak hours")
-    print(f"    published  {', '.join((AUDIT.get(r['provider']) or plan.get('sources', {})).values())}")
+    # Only a feed that carries prices can be called the source of a price; Command Code's
+    # roster names the models and nothing else, so its numbers come from the page.
+    feeds = [url for kind, url in (AUDIT.get(r["provider"]) or {}).items()
+             if kind in ("plans", "models")]
+    print(f"    published  {', '.join(feeds or plan.get('sources', {}).values())}")
     print(f"    ceiling    ${ceiling:g} a month, the tightest of the plan's limits "
           f"({r.get('caps at')})")
     print(f"    fee        ${fee:g} / ${ceiling:g} = {scale:.6f}")
+    entry = next((m for m in (plan.get("models") if isinstance(plan.get("models"), list) else [])
+                  if m.get("id") == r.get("base")), {})
+    factor = float(entry.get("factor") or 1.0)
+    if factor != 1.0:
+        print(f"    plan rate  x{factor:g} for this model, so the fee over the ceiling is "
+              f"{scale * factor:.6f}")
     print(f"    our cost   input {r['input']:.6f}  cache read {r['cache']:.6f}  "
           f"output {r['output']:.6f}")
     print(f"    blended    0.025 x {r['input']:.6f} + 0.97 x {r['cache']:.6f} + 0.005 x "
