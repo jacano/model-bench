@@ -855,7 +855,7 @@
     "week_usd": 15.0,
     "five_hours_usd": 5.0
    },
-   "note": "credit multiplier per model, applied to the price OpenDesign publishes; $10 buys $60 of base Coding Plan credits, so a dollar costs 16.7 cents. The card's $220 / $55 / $18 are the 0.27x (Eco) equivalents of the $60 / $15 / $5 base (60/0.27=222->220, 15/0.27=55.6->55, 5/0.27=18.5->18), not further credits; corrected 2026-11-24 from the maintainer's review of real-api-pricing#257. Go has a 7-day and a 5-hour window. Page 2026-11-18: three more tiers above Go (Plus $20 for 310, Pro $100 for 780, Max $200 for 1,410, with 20, 120 and 300 of Top Model credits and only a 7-day window), MiMo V2.6 Flash and Pro now cost 4x where they cost 1x, and DeepSeek V4.1 Flash carries a 0.25x off-peak promo dated 2026-10-20 18:00 to 2026-10-27 18:00 (UTC+8), now a stale row. The page's Coding Plan table names eleven models and carries no Claude, GPT or GLM-5.3 FlashX row; those three were the console's, not the plan's, and left the block on 2026-11-22: Haiku because the console bills it at x2 against the $1 pay-as-you-go credit beside the plan, GPT-6 Luna and GLM-5.3 FlashX because Go prices neither and has no Top Model credits to draw them from. The block now holds exactly the plan's eleven. Console catalogue 2026-11-18: all fourteen base rates the block carried then matched it, and it prints no cached-write rate on twelve of them, where this block charges input for the same reason. Black Friday 2026 (2026-11-21 18:00 to 2026-12-05 00:00 UTC+8, from the campaign countdown): new subscriptions bought during the campaign get unlimited DeepSeek V4.1 Flash and V4.1 Flash Eco, which then consume no Model Credits; plans bought before the campaign do not, and this one was bought 2026-11-16. Re-checked 2026-11-23: the Cloud model catalogue reprints the same eleven rates (0.30/1.20/0.006 on DeepSeek V4.1 Flash, 0.075/0.25/0.015 on GLM-5.3 Flash, and so on), and the console's Plan & balance shows only the 5-hour and 7-day windows plus a pay-as-you-go balance - no per-model counter. The page's \"Monthly usage\" column is a 60-credit equivalent, in the vendor's own words a \"model-specific usage equivalent, not an increase in the shared plan credits\": the allowance is one shared $220 pool, and the per-model figures are that pool converted at each multiplier, not caps. Page 2026-11-28: the Coding Plan list is thirteen again and Claude Haiku 5.5 and GPT-6 Luna are both on it at 4x - the two rows that left on 2026-11-22 are back, at the $15 a month the page gives them on Go - so the block carried thirteen. The pool maths did not move and the page now shows it row by row: its Coding Plan usage table gives DeepSeek V4.1 Flash Eco $220 a month (0,27x of $60), DeepSeek V4.1 Flash $120 (0,5x), the 1x rows $60 and the 4x rows $15, so the $220 on the card is still the Eco-equivalent face value and $60 is still the credit pool. The plan now serves the 1017 build of DeepSeek V4.1 Flash and advertises an all-day off-peak week for it; the row keeps the 0,30 / 1,20 the console billed on 2026-11-16, the peak half of that build's official schedule, because nothing since bills the other half. Plus, Pro and Max keep $310 / $780 / $1.410 with $20 / $120 / $300 of Top Model credits and only a 7-day window, and every Top Model stays off Go. DeepSeek V4.1 Flash Eco left on 2026-11-28: measured on the Responses shape at 59 t/s against the 85 floor - 2,52 s latency, 100% cache, 100% tools - it was the cheapest point the chart ever drew at 0,00087 a blended million and a row no agent should be run on, so the block carries twelve and the chart refuses any row its own measurement failed.",
+   "note": "credit multiplier per model, applied to the price OpenDesign publishes; $10 buys $60 of base Coding Plan credits, so a dollar costs 16.7 cents. The card's $220 / $55 / $18 are the 0.27x (Eco) equivalents of the $60 / $15 / $5 base (60/0.27=222->220, 15/0.27=55.6->55, 5/0.27=18.5->18), not further credits; corrected 2026-11-24 from the maintainer's review of real-api-pricing#257. Go has a 7-day and a 5-hour window. Page 2026-11-18: three more tiers above Go (Plus $20 for 310, Pro $100 for 780, Max $200 for 1,410, with 20, 120 and 300 of Top Model credits and only a 7-day window), MiMo V2.6 Flash and Pro now cost 4x where they cost 1x, and DeepSeek V4.1 Flash carries a 0.25x off-peak promo dated 2026-10-20 18:00 to 2026-10-27 18:00 (UTC+8), now a stale row. The page's Coding Plan table names eleven models and carries no Claude, GPT or GLM-5.3 FlashX row; those three were the console's, not the plan's, and left the block on 2026-11-22: Haiku because the console bills it at x2 against the $1 pay-as-you-go credit beside the plan, GPT-6 Luna and GLM-5.3 FlashX because Go prices neither and has no Top Model credits to draw them from. The block now holds exactly the plan's eleven. Console catalogue 2026-11-18: all fourteen base rates the block carried then matched it, and it prints no cached-write rate on twelve of them, where this block charges input for the same reason. Black Friday 2026 (2026-11-21 18:00 to 2026-12-05 00:00 UTC+8, from the campaign countdown): new subscriptions bought during the campaign get unlimited DeepSeek V4.1 Flash and V4.1 Flash Eco, which then consume no Model Credits; plans bought before the campaign do not, and this one was bought 2026-11-16. Re-checked 2026-11-23: the Cloud model catalogue reprints the same eleven rates (0.30/1.20/0.006 on DeepSeek V4.1 Flash, 0.075/0.25/0.015 on GLM-5.3 Flash, and so on), and the console's Plan & balance shows only the 5-hour and 7-day windows plus a pay-as-you-go balance - no per-model counter. The page's \"Monthly usage\" column is a 60-credit equivalent, in the vendor's own words a \"model-specific usage equivalent, not an increase in the shared plan credits\": the allowance is one shared $220 pool, and the per-model figures are that pool converted at each multiplier, not caps. Page 2026-11-28: the Coding Plan list is thirteen again and GPT-6 Luna is on it at 4x, at the $15 a month the page gives it on Go, so the block carries eleven. Claude Haiku 5.5 is the one that stays out, and the page is wrong about it: the console bills it at list x2 against the $1 pay-as-you-go credit beside the plan - the maintainer's own route drew that credit to nothing in a session on 2026-11-22 - so there is no plan price for it, only a list price doubled. The pool maths did not move and the page now shows it row by row: its Coding Plan usage table gives DeepSeek V4.1 Flash Eco $220 a month (0,27x of $60), DeepSeek V4.1 Flash $120 (0,5x), the 1x rows $60 and the 4x rows $15, so the $220 on the card is still the Eco-equivalent face value and $60 is still the credit pool. The plan now serves the 1017 build of DeepSeek V4.1 Flash and advertises an all-day off-peak week for it; the row keeps the 0,30 / 1,20 the console billed on 2026-11-16, the peak half of that build's official schedule, because nothing since bills the other half. Plus, Pro and Max keep $310 / $780 / $1.410 with $20 / $120 / $300 of Top Model credits and only a 7-day window, and every Top Model stays off Go. DeepSeek V4.1 Flash Eco left on 2026-11-28: measured on the Responses shape at 59 t/s against the 85 floor - 2,52 s latency, 100% cache, 100% tools - it was the cheapest point the chart ever drew at 0,00087 a blended million and a row no agent should be run on, so the block carries eleven and the chart refuses any row its own measurement failed.",
    "models": [
     {
      "id": "deepseek-v4.1-flash",
@@ -942,15 +942,6 @@
      "cache_write": 0.44
     },
     {
-     "id": "claude-haiku-5-5",
-     "factor": 4.0,
-     "input": 0.1,
-     "cache": 0.01,
-     "output": 0.5,
-     "cache_write": 0.125,
-     "multiplier_note": "page 2026-11-28: Haiku 5.5 is back in the Coding Plan's thirteen, at 4x - the console's $15 a month for Go, where the page prices it - and it is the reason it left on 2026-11-22."
-    },
-    {
      "id": "gpt-6-luna",
      "factor": 4.0,
      "input": 0.1,
@@ -988,7 +979,7 @@
     "five_hours_usd": 25.0,
     "week_usd": 50.0
    },
-   "note": "Go at $9.9 a month, $99 a year: the plan's own API (openkodo.dev/api/public/plans and /api/public/models, read 2026-11-28) gives it $100 of included usage, $25 in any 5 hours and $50 in any 7, 70.000 requests per 5 hours, and a monthly cap on every model it sells - $100 on DeepSeek V4.1 Flash 1017, DeepSeek V4.1 Flash Eco and GLM-5.3, $66 on GLM-5.2, GLM-5.3 Flash, GLM-5.3 FlashX, Kimi K2.7 Code, Qwen3.7 Plus and MiniMax M3, $60 on Hunyuan 4, $50 on Claude Haiku 4.5, $33 on Qwen3.8 Flash, $22 on MiniMax M3.1 Flash, $10 on Claude Fable 5.1 and 5.2, and $17 on the other sixteen. The fee over min($100, cap) prices a million input tokens of DeepSeek V4.1 Flash at 0.0149 and a million of Claude Opus 5.5 at 2.33. Three of the site's own figures disagree about how wide the plan is: the pricing page's 'Included models' table names 17 rows because that is the Go-versus-OpenCode comparison, the plan's description still says 'the full 20-model catalog', and the API - which is what the checkout meters - carries 40 chat models, every one of them on Go, which is what the FAQ and the home page say as well. Nine of the forty stay out of this table under the 2026-11-24 rule, because their price rises past a context threshold and a one-price table cannot hold that: Claude Haiku 5.5 (>100K, x5) and the eight GPT rows (gpt-5.6-sol, gpt-5.6-terra, gpt-6-sol, gpt-6.1-sol, gpt-6.1-terra, gpt-6.2-sol, gpt-6-astra and gpt-6.2-astra; >272K, input x2 and output x1.5). The 31 carried rows are the API's own rates, cache read included and cache write where the API prices one - the Claude rows; a zero there is left as no separate write charge. DeepSeek bills peak hours and the API's row carries both halves, so its three models draw two points each, as they do on Command Code and OpenCode. Unmeasured: no row in models.csv and nothing admitted, so the chart carries these points with no gate behind them. A first Google or GitHub sign-in carries $10 of welcome usage at $2 per five hours and an invite code makes the first month $4.9; neither is in the price. Pro is $19.9 for double of all of it, and is recorded, not priced.",
+   "note": "Go at $9.9 a month, $99 a year: the plan's own API (openkodo.dev/api/public/plans and /api/public/models, read 2026-11-28) gives it $100 of included usage, $25 in any 5 hours and $50 in any 7, 70.000 requests per 5 hours, and a monthly cap on every model it sells - $100 on DeepSeek V4.1 Flash 1017, DeepSeek V4.1 Flash Eco and GLM-5.3, $66 on GLM-5.2, GLM-5.3 Flash, GLM-5.3 FlashX, Kimi K2.7 Code, Qwen3.7 Plus and MiniMax M3, $60 on Hunyuan 4, $50 on Claude Haiku 4.5, $33 on Qwen3.8 Flash, $22 on MiniMax M3.1 Flash, $10 on Claude Fable 5.1 and 5.2, and $17 on the other sixteen. The fee over min($100, cap) prices a million input tokens of DeepSeek V4.1 Flash at 0.0149 and a million of Claude Opus 5.5 at 2.33. Three of the site's own figures disagree about how wide the plan is: the pricing page's 'Included models' table names 17 rows because that is the Go-versus-OpenCode comparison, the plan's description still says 'the full 20-model catalog', and the API - which is what the checkout meters - carries 32 chat models, every one of them on Go, which is what the FAQ and the home page say as well. It carried 40 this morning: the plan retired eight Claude rows on 2026-11-28 - fable 5.1, haiku 4.5, opus 4.6, 4.7, 4.8 and 5, sonnet 4.6 and 5 - leaving fable 5.2, opus 5.5, sonnet 5.5 and haiku 5.5 of that family. Nine of the thirty-two stay out of this table under the 2026-11-24 rule, because their price rises past a context threshold and a one-price table cannot hold that: Claude Haiku 5.5 (>100K, x5) and the eight GPT rows (gpt-5.6-sol, gpt-5.6-terra, gpt-6-sol, gpt-6.1-sol, gpt-6.1-terra, gpt-6.2-sol, gpt-6-astra and gpt-6.2-astra; >272K, input x2 and output x1.5). The 31 carried rows are the API's own rates, cache read included and cache write where the API prices one - the Claude rows; a zero there is left as no separate write charge. DeepSeek bills peak hours and the API's row carries both halves, so its three models draw two points each, as they do on Command Code and OpenCode. Unmeasured: no row in models.csv and nothing admitted, so the chart carries these points with no gate behind them. A first Google or GitHub sign-in carries $10 of welcome usage at $2 per five hours and an invite code makes the first month $4.9; neither is in the price. Pro is $19.9 for double of all of it, and is recorded, not priced.",
    "models": [
     {
      "id": "MiniMax-M2.7",
@@ -1019,14 +1010,6 @@
      "output": 0.6
     },
     {
-     "id": "claude-fable-5-1",
-     "name": "Claude Fable 5.1",
-     "input": 10.0,
-     "cache": 0.25,
-     "output": 50.0,
-     "cache_write": 12.5
-    },
-    {
      "id": "claude-fable-5-2",
      "name": "Claude Fable 5.2",
      "input": 8.0,
@@ -1035,68 +1018,12 @@
      "cache_write": 10.0
     },
     {
-     "id": "claude-haiku-4-5-20251001",
-     "name": "Claude Haiku 4.5",
-     "input": 1.0,
-     "cache": 0.1,
-     "output": 5.0,
-     "cache_write": 1.25
-    },
-    {
-     "id": "claude-opus-4-6",
-     "name": "Claude Opus 4.6",
-     "input": 5.0,
-     "cache": 0.5,
-     "output": 25.0,
-     "cache_write": 6.25
-    },
-    {
-     "id": "claude-opus-4-7",
-     "name": "Claude Opus 4.7",
-     "input": 5.0,
-     "cache": 0.5,
-     "output": 25.0,
-     "cache_write": 6.25
-    },
-    {
-     "id": "claude-opus-4-8",
-     "name": "Claude Opus 4.8",
-     "input": 5.0,
-     "cache": 0.5,
-     "output": 25.0,
-     "cache_write": 6.25
-    },
-    {
-     "id": "claude-opus-5",
-     "name": "Claude Opus 5",
-     "input": 5.0,
-     "cache": 0.5,
-     "output": 25.0,
-     "cache_write": 6.25
-    },
-    {
      "id": "claude-opus-5-5",
      "name": "Claude Opus 5.5",
      "input": 4.0,
      "cache": 0.2,
      "output": 20.0,
      "cache_write": 5.0
-    },
-    {
-     "id": "claude-sonnet-4-6",
-     "name": "Claude Sonnet 4.6",
-     "input": 3.0,
-     "cache": 0.3,
-     "output": 15.0,
-     "cache_write": 3.75
-    },
-    {
-     "id": "claude-sonnet-5",
-     "name": "Claude Sonnet 5",
-     "input": 2.0,
-     "cache": 0.2,
-     "output": 10.0,
-     "cache_write": 2.5
     },
     {
      "id": "claude-sonnet-5-5",
@@ -1233,16 +1160,8 @@
     "MiniMax M2.7 Highspeed": 17.0,
     "MiniMax M3": 66.0,
     "MiniMax M3.1 Flash": 22.0,
-    "Claude Fable 5.1": 10.0,
     "Claude Fable 5.2": 10.0,
-    "Claude Haiku 4.5": 50.0,
-    "Claude Opus 4.6": 17.0,
-    "Claude Opus 4.7": 17.0,
-    "Claude Opus 4.8": 17.0,
-    "Claude Opus 5": 17.0,
     "Claude Opus 5.5": 17.0,
-    "Claude Sonnet 4.6": 17.0,
-    "Claude Sonnet 5": 17.0,
     "Claude Sonnet 5.5": 17.0,
     "DeepSeek V4 Pro 0813": 17.0,
     "DeepSeek V4.1 Flash 1017": 100.0,
