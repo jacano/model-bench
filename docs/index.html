@@ -99,6 +99,30 @@
   footer a:hover { color:var(--ink); border-color:var(--ink); }
   .promos { flex-basis:100%; color:#a3a3a3; }
   .promos:empty { display:none; }
+
+  .others { margin-top:38px; border-top:1px solid var(--line); padding-top:26px; }
+  .others h2 { font-size:15px; font-weight:600; letter-spacing:.2px; margin:0 0 4px;
+               color:var(--ink); }
+  .others h2 + table { margin-top:12px; }
+  .others h2:not(:first-child) { margin-top:30px; }
+  .others .lead, .others .note { color:var(--faint); font-size:12.5px; margin:6px 0 0; }
+  .others table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .others th { text-align:left; font-weight:500; color:var(--faint); font-size:11.5px;
+               text-transform:uppercase; letter-spacing:.06em; padding:0 14px 8px 0;
+               border-bottom:1px solid var(--line2); }
+  .others td { vertical-align:top; padding:10px 14px 10px 0; color:var(--dim);
+               border-bottom:1px solid var(--line); }
+  .others td:first-child { color:var(--ink); white-space:nowrap; }
+  .others td strong { color:var(--ink); font-weight:600; }
+  .others code { font-size:11.5px; color:var(--ink); }
+  .others a { color:var(--dim); text-decoration:none; border-bottom:1px solid var(--line2); }
+  .others a:hover { color:var(--ink); border-color:var(--ink); }
+  @media (max-width:820px) {
+    .others table, .others thead, .others tbody, .others tr, .others td, .others th { display:block; }
+    .others th { display:none; }
+    .others td { padding:4px 0; border:0; }
+    .others tr { padding:12px 0; border-bottom:1px solid var(--line); }
+  }
   @media (max-width:820px) {
     .wrap { padding:22px 16px; }
     h1 { font-size:22px; }
@@ -145,6 +169,66 @@
     <svg id="chart" viewBox="0 0 1400 730" preserveAspectRatio="xMidYMid meet"></svg>
     <div id="tip"></div>
   </div>
+
+  <section class="others">
+    <h2>What each plan is good at</h2>
+    <table>
+      <thead><tr><th>plan</th><th>its strength</th><th>where it stops</th></tr></thead>
+      <tbody>
+        <tr><td>Command Code GOAT</td>
+          <td>the widest table on the page: 74 models priced, $100 of allowance on DeepSeek V4.1
+            Flash, GLM-5.3 Flash and both Ling rows, $70 on GLM-5.3 and GLM-5.2</td>
+          <td>every premium row is capped at $10-20, so the top of the board stays out of reach</td></tr>
+        <tr><td>OpenDesign Go</td>
+          <td>the only plan measured here and checked against an invoice, and the deepest discount
+            on DeepSeek: 0.5&times; on 60 credits is 12&times; the fee</td>
+          <td>eleven models and no Top Model credit at all; the 5-hour window is the tightest of
+            the four</td></tr>
+        <tr><td>OpenKodo Go</td>
+          <td>the cheapest top end: Claude Opus 5.5 at a $17 monthly cap, 0.229 a blended
+            million, and three protocols on one key</td>
+          <td>its route is unmeasured, so the point carries no gate</td></tr>
+        <tr><td>OpenCode Go</td>
+          <td>the deepest single allowances: GLM-5.3 at $200 (20&times; the fee) and Kimi K3.1 Pro
+            at $60, which is the cheapest point above Terminal-Bench 57</td>
+          <td>twenty-two chat models and no live measurement of the route</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Beyond the four</h2>
+    <p class="lead">Worth knowing, and none of them is on the chart: a plan gets a point only if
+      it publishes a ceiling its tokens can be priced against and one price per model.</p>
+    <table>
+      <thead><tr><th>plan</th><th>price</th><th>what it gives</th><th>what to watch</th></tr></thead>
+      <tbody>
+        <tr><td><a href="https://coralbricks.ai/subscriptions">Coral Bricks</a></td>
+          <td><strong>$9.99/mo</strong></td>
+          <td><strong>unlimited tokens</strong> on DeepSeek V4.1 Flash: no meter and no cap, for one
+            personal agent</td>
+          <td>the key takes <em>one request at a time</em>, which is how they keep a flat price;
+            that is fine for a single agent loop and wrong for a fleet. It also sells per-token
+            tiers: Value 0.005 / 0.003 / 0.57, Standard 0.19 / 0.008 / 0.60, Fast 0.45 / 0.009 /
+            1.80 per million, no cache write</td></tr>
+        <tr><td><a href="https://experientiallabs.ai/pricing">Experiential Labs</a></td>
+          <td>Free $0 · Pro $20 · Max $200 · Ultra $2,000</td>
+          <td>a flat price with no per-token charge inside the limits: 1M tokens a day on Free,
+            10&times; that on Pro, 100&times; on Max, 1,000&times; on Ultra; core models are GPT-6
+            Luna, DeepSeek V4.1 Flash and Clef, and Haiku 5.5 and Qwen3.8 27B join at Ultra</td>
+          <td>the limits are daily token buckets, not dollars, so they cannot sit on this axis; the
+            free tier is where the 132 t/s DeepSeek build measured here lived before the offer
+            ended</td></tr>
+        <tr><td><a href="https://opengateway.ai/">OpenGateway</a></td>
+          <td>prepaid credits</td>
+          <td>114 models behind one key, with its own faster variants:
+            <code>deepseek-v4.1-flash-ultrafast</code> (1017, sold as a thirtieth of the price at
+            twelve times the speed) and <code>glm-5.3-flash-ultrafast</code></td>
+          <td>no subscription at all - "no monthly invoice and no subscription" - and its rows left
+            this table on 2026-11-24 because their price doubles past 256K of context</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Read 2026-11-28 off the sites named in each row. The three below the chart are
+      unmeasured here and priced nowhere in it.</p>
+  </section>
 
   <footer>
     <span>Every model every plan in <code>data/plans.json</code> that Terminal-Bench ranks

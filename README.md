@@ -43,6 +43,11 @@ on the page can be traced back to the JSON it was read from. `measure --api resp
 a route down the Responses shape, which is the one OpenDesign serves, instead of chat
 completions.
 
+Under the chart the page says what each plan is good at, and names three that are not on it:
+Coral Bricks' $9.99 unlimited (one request at a time), Experiential Labs' daily token buckets,
+and OpenGateway's prepaid credits. A point needs a published ceiling in dollars and one price
+per model; none of the three has both, so none is priced here.
+
 `agentic` runs a real task through that route, three rounds, and pytest decides. `measure`
 with `--model` and `--tbench` measures one route instead of checking the stored table.
 
