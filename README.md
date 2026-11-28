@@ -25,7 +25,10 @@ python bench.py agentic --provider opendesign --model deepseek-v4.1-flash
 ```
 
 The chart's axis is a million tokens at the blended shape: 97% cache, 2.5% fresh, 0.5% out,
-the convention Real API Pricing publishes, so the two can be read side by side. `--mix
+the convention Real API Pricing publishes, so the two can be read side by side. A model or a
+plan running a promotion today carries a star, and the line under the plot says which
+promotion, for whom and until when — the price drawn is the price paid, and the star is the
+warning that it will not be one for long. `--mix
 fresh,cache,out` prices another shape. A model that prices peak hours separately (the
 DeepSeek family on Command Code and on OpenCode Go) gets two points, off-peak and peak,
 instead of an average that is neither. Nothing under Terminal-Bench 20 is drawn: a point that

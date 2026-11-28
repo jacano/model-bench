@@ -306,6 +306,7 @@ def plan_rows(store: dict, day: date, want: str | None = None) -> list[dict]:
                 factor = base * hourly
                 out.append({"provider": provider, "model": m["id"] + suffix, "base": m["id"],
                             "caps at": bound, "ceiling": usable,
+                            "promo": m.get("promo"), "plan_promo": plan.get("promo"),
                             "list": {k: float(rates[k]) for k in
                                      ("input", "cache", "output", "cache_write")
                                      if rates.get(k) is not None},
@@ -722,6 +723,7 @@ def write_page(rows: list[dict], store: dict, subject: str,
             "plan": plan["plan"], "fee": plan.get("fee_usd"),
             "tb": round(r["tb"], 2), "state": r.get("state", "unmeasured"),
             "cost": round(r["cost"], 6), "cap": r.get("ceiling"),
+            "promo": r.get("promo"), "planPromo": r.get("plan_promo"),
             "eff": {k: round(v, 6) for k, v in r.items()
                     if k in ("input", "cache", "cache_write", "output")},
             "list": {k: round(v, 6) for k, v in r["list"].items()},
@@ -732,7 +734,7 @@ def write_page(rows: list[dict], store: dict, subject: str,
                                                     for k, v in CHART_COLOURS.items()}))
                 .replace("__PLANS__", json.dumps(
                     {name: {"plan": p["plan"], "fee": p.get("fee_usd"),
-                            "label": p.get("label") or name}
+                            "label": p.get("label") or name, "promo": p.get("promo")}
                      for name, p in store["providers"].items()}))
                 .replace("__SUBJECT__", json.dumps(subject))
                 .replace("__GENERATED__", date.today().isoformat()))
@@ -819,6 +821,8 @@ def draw_png(rows: list[dict], front: list[dict], store: dict,
     for r in sorted(front, key=lambda r: r["tb"]):
         x, y = px(r["cost"]), py(r["tb"])
         text = f"{r['model'].split('/')[-1]}  {r['tb']:.1f}"
+        if r.get("promo"):
+            text += " *"
         box = dr.textbbox((0, 0), text, font=f_dot)
         w, h = box[2] - box[0], box[3] - box[1]
         bx = min(x + 16, W - M - w - 20)
@@ -848,11 +852,35 @@ def draw_png(rows: list[dict], front: list[dict], store: dict,
         lx += dr.textbbox((0, 0), text, font=f_tick)[2] + 60
 
 
-    dr.line([(M, H - 78), (W - M, H - 78)], fill=(30, 38, 50))
-    dr.text((M, H - 62), "Every model every plan in data/plans.json that Terminal-Bench "
+    # A star marks anything the plan runs as a promotion today: a model price, or the fee
+    # itself. The line under the plot says what each one is, wrapped rather than clipped.
+    starred = []
+    for r in rows:
+        if r.get("promo"):
+            item = f"* {r['model']} {r['promo']}"
+            if item not in starred:
+                starred.append(item)
+    for name, plan in store["providers"].items():
+        if plan.get("promo"):
+            starred.append(f"* {plan.get('label') or name} {plan['promo']}")
+    if starred:
+        lines, line = [], ""
+        for item in starred:
+            if line and len(line) + len(item) + 3 > 120:
+                lines.append(line)
+                line = item
+            else:
+                line = f"{line} · {item}" if line else item
+        lines.append(line)
+        for i, text in enumerate(lines[:3]):
+            dr.text((M, H - 58 + i * 17), text if i else "in promotion today: " + text,
+                    font=f_tick, fill=(150, 156, 165))
+
+    dr.line([(M, H - 96), (W - M, H - 96)], fill=(30, 38, 50))
+    dr.text((M, H - 80), "Every model every plan in data/plans.json that Terminal-Bench "
             "ranks at 30+ and our own run did not fail. Controls: linearbench.",
             font=f_tick, fill=(110, 118, 129))
-    dr.text((W - M, H - 62), f"model-bench · {date.today().isoformat()}", font=f_tick,
+    dr.text((W - M, H - 80), f"model-bench · {date.today().isoformat()}", font=f_tick,
             fill=(110, 118, 129), anchor="ra")
 
     path.parent.mkdir(parents=True, exist_ok=True)
